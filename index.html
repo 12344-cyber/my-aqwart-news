@@ -1,895 +1,379 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أقورط - موقع إخباري متكامل</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-    <style>
-        :root {
-            --primary: #1a365d;
-            --secondary: #2d3748;
-            --accent: #e53e3e;
-            --light: #f7fafc;
-            --dark: #1a202c;
-            --gray: #718096;
-            --border: #e2e8f0;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --radius: 8px;
-        }
-        
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        
-        body {
-            font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
-            background-color: #f5f7fa;
-            color: var(--dark);
-            line-height: 1.6;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 15px;
-        }
-        
-        /* Header Styles */
-        header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 1rem 0;
-            box-shadow: var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .logo h1 {
-            font-size: 1.8rem;
-            font-weight: 700;
-        }
-        
-        .logo-icon {
-            font-size: 2rem;
-        }
-        
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 1.5rem;
-        }
-        
-        nav a {
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-        
-        nav a:hover {
-            color: #cbd5e0;
-        }
-        
-        /* Hero Section */
-        .hero {
-            background: linear-gradient(rgba(26, 54, 93, 0.8), rgba(26, 54, 93, 0.9)), url('https://images.unsplash.com/photo-1504711434969-e33886168f5c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
-            background-size: cover;
-            background-position: center;
-            color: white;
-            padding: 4rem 0;
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        
-        .hero h2 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .hero p {
-            font-size: 1.2rem;
-            max-width: 700px;
-            margin: 0 auto 1.5rem;
-        }
-        
-        /* Main Content */
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-        
-        @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        /* Posts Section */
-        .posts-section {
-            background: white;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 1.5rem;
-        }
-        
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--border);
-        }
-        
-        .section-header h2 {
-            font-size: 1.5rem;
-            color: var(--primary);
-        }
-        
-        /* Controls */
-        .controls {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 1.5rem;
-        }
-        
-        button {
-            padding: 10px 16px;
-            border: none;
-            border-radius: var(--radius);
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: var(--secondary);
-        }
-        
-        .btn-secondary {
-            background: var(--gray);
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background: #4a5568;
-        }
-        
-        .btn-danger {
-            background: var(--accent);
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background: #c53030;
-        }
-        
-        /* Editor */
-        #editor {
-            display: none;
-            background: white;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        input[type="text"], textarea, select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            font-family: 'Cairo', sans-serif;
-            margin-bottom: 1rem;
-        }
-        
-        textarea {
-            min-height: 150px;
-            resize: vertical;
-        }
-        
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: var(--secondary);
-        }
-        
-        .actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-start;
-            margin-top: 1rem;
-        }
-        
-        /* Posts */
-        .post {
-            background: white;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            border-right: 4px solid var(--primary);
-            transition: transform 0.3s;
-        }
-        
-        .post:hover {
-            transform: translateY(-5px);
-        }
-        
-        .post h3 {
-            margin: 0 0 10px;
-            color: var(--primary);
-            font-size: 1.3rem;
-        }
-        
-        .post-meta {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-            color: var(--gray);
-        }
-        
-        .post-category {
-            background: var(--accent);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-        }
-        
-        .post-body {
-            margin-bottom: 15px;
-            line-height: 1.7;
-        }
-        
-        .post-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 0.85rem;
-        }
-        
-        /* Sidebar */
-        .sidebar {
-            background: white;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 1.5rem;
-        }
-        
-        .sidebar-section {
-            margin-bottom: 2rem;
-        }
-        
-        .sidebar-section h3 {
-            font-size: 1.2rem;
-            color: var(--primary);
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--border);
-        }
-        
-        .categories-list {
-            list-style: none;
-        }
-        
-        .categories-list li {
-            margin-bottom: 0.7rem;
-        }
-        
-        .categories-list a {
-            color: var(--secondary);
-            text-decoration: none;
-            display: flex;
-            justify-content: space-between;
-        }
-        
-        .categories-list a:hover {
-            color: var(--primary);
-        }
-        
-        .category-count {
-            background: var(--light);
-            padding: 2px 8px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-        }
-        
-        /* Footer */
-        footer {
-            background: var(--dark);
-            color: white;
-            padding: 2rem 0;
-            margin-top: 3rem;
-        }
-        
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-        }
-        
-        .footer-section h3 {
-            font-size: 1.2rem;
-            margin-bottom: 1rem;
-            color: var(--light);
-        }
-        
-        .footer-section p, .footer-section a {
-            color: #cbd5e0;
-            margin-bottom: 0.5rem;
-            display: block;
-            text-decoration: none;
-        }
-        
-        .footer-section a:hover {
-            color: white;
-        }
-        
-        .copyright {
-            text-align: center;
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid #2d3748;
-            color: #a0aec0;
-        }
-        
-        /* Utilities */
-        .note {
-            font-size: 0.9rem;
-            color: var(--gray);
-            margin-top: 1rem;
-            text-align: center;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 2rem;
-            color: var(--gray);
-        }
-        
-        .empty-state i {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            display: block;
-            color: #cbd5e0;
-        }
-        
-        .search-box {
-            position: relative;
-            margin-bottom: 1.5rem;
-        }
-        
-        .search-box input {
-            padding-right: 40px;
-        }
-        
-        .search-icon {
-            position: absolute;
-            right: 12px;
-            top: 12px;
-            color: var(--gray);
-        }
-        
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 2rem;
-            color: var(--gray);
-        }
-        
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: var(--primary);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Animation */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .fade-in {
-            animation: fadeIn 0.5s ease-out;
-        }
-        
-        /* Admin Panel */
-        .admin-panel {
-            background: #fff5f5;
-            border: 1px solid #fed7d7;
-            border-radius: var(--radius);
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .admin-panel h3 {
-            color: var(--accent);
-            margin-bottom: 0.5rem;
-        }
-        
-        .admin-panel p {
-            font-size: 0.9rem;
-            color: var(--secondary);
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-            }
-            
-            nav ul {
-                gap: 1rem;
-            }
-            
-            .hero h2 {
-                font-size: 2rem;
-            }
-            
-            .controls {
-                justify-content: center;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>صندوق تكافل اجتماعي - أهل لفريگ أفريگ حمادي</title>
+<style>
+  *{box-sizing:border-box;}
+  body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:#f0f4f8;margin:0;color:#222;}
+  header{background:linear-gradient(135deg,#2e8b57,#1f6b40);color:#fff;padding:18px;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.15);}
+  header h1{margin:0;font-size:20px;}
+  header p{margin:4px 0 0;font-size:13px;opacity:.9;}
+  nav{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:10px;background:#fff;border-bottom:1px solid #ddd;}
+  nav button{padding:8px 14px;border:none;border-radius:20px;background:#e8f1ec;color:#2e8b57;cursor:pointer;font-weight:bold;font-size:14px;}
+  nav button.active{background:#2e8b57;color:#fff;}
+  main{max-width:700px;margin:16px auto;padding:0 12px 40px;}
+  .card{background:#fff;padding:16px;border-radius:12px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.07);}
+  .stat{display:flex;justify-content:space-between;align-items:center;font-size:16px;margin:6px 0;}
+  .stat .big{font-size:22px;font-weight:bold;color:#2e8b57;}
+  label{display:block;margin:10px 0 4px;font-size:14px;color:#444;}
+  input,select{width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;font-size:15px;font-family:inherit;}
+  input[type=file]{padding:6px;}
+  button.primary{background:#2e8b57;color:#fff;border:none;padding:12px;border-radius:8px;font-size:15px;cursor:pointer;width:100%;margin-top:10px;}
+  button.primary:hover{background:#256d45;}
+  button.danger{background:#c0392b;}
+  button.secondary{background:#6c757d;}
+  .member{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;cursor:pointer;border:1px solid #eee;margin-bottom:8px;background:#fff;}
+  .member:hover{border-color:#2e8b57;background:#f8fdf9;}
+  .member img{width:48px;height:48px;border-radius:50%;object-fit:cover;background:#eee;flex-shrink:0;}
+  .member .avatar-sm{width:48px;height:48px;border-radius:50%;background:#e8f1ec;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+  .member .info{flex:1;min-width:0;}
+  .member .info b{display:block;font-size:15px;}
+  .member .info small{color:#666;font-size:12px;}
+  .avatar{width:90px;height:90px;border-radius:50%;object-fit:cover;background:#e8f1ec;display:block;margin:0 auto 10px;}
+  .avatar-big{width:90px;height:90px;border-radius:50%;background:#e8f1ec;display:flex;align-items:center;justify-content:center;font-size:40px;margin:0 auto 10px;}
+  .row{display:flex;gap:8px;}
+  .row>*{flex:1;}
+  .item{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #eee;font-size:14px;}
+  .item:last-child{border-bottom:none;}
+  .empty{color:#888;font-size:14px;text-align:center;padding:12px;}
+  .hidden{display:none !important;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#2e8b57;color:#fff;padding:10px 22px;border-radius:30px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;font-size:14px;}
+  .toast.show{opacity:1;}
+  textarea{width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;font-family:monospace;font-size:13px;min-height:200px;resize:vertical;}
+</style>
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <div class="logo">
-                    <span class="logo-icon">📰</span>
-                    <h1>أقورط</h1>
-                </div>
-                <nav>
-                    <ul>
-                        <li><a href="#">الرئيسية</a></li>
-                        <li><a href="#">الأخبار العاجلة</a></li>
-                        <li><a href="#">مقالات الرأي</a></li>
-                        <li><a href="#">منوعات</a></li>
-                        <li><a href="#">اتصل بنا</a></li>
-                    </ul>
-                </nav>
-            </div>
-        </div>
-    </header>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="container">
-            <h2>أقورط - مصدرك الموثوق للأخبار</h2>
-            <p>نقدم لكم آخر الأخبار والمستجدات من جميع أنحاء العالم بدقة ومهنية</p>
-            <button class="btn-primary" id="showEditorBtn">نشر خبر جديد</button>
-        </div>
-    </section>
+<header>
+  <h1>صندوق تكافل اجتماعي</h1>
+  <p>جماعة أهل لفريگ أفريگ حمادي</p>
+</header>
 
-    <!-- Main Content -->
-    <div class="container">
-        <div class="main-content">
-            <!-- Posts Section -->
-            <div class="posts-section">
-                <div class="section-header">
-                    <h2>آخر الأخبار</h2>
-                    <div class="search-box">
-                        <input type="text" id="searchInput" placeholder="ابحث في الأخبار...">
-                        <span class="search-icon">🔍</span>
-                    </div>
-                </div>
+<nav>
+  <button data-view="home"    onclick="showView('home')">🏠 الرئيسية</button>
+  <button data-view="add"     onclick="showView('add')">➕ إضافة فرد</button>
+  <button data-view="members" onclick="showView('members')">👥 الأفراد</button>
+  <button data-view="stats"   onclick="showView('stats')">📊 الإحصائيات</button>
+</nav>
 
-                <!-- Admin Panel -->
-                <div class="admin-panel">
-                    <h3>لوحة التحكم للمطور</h3>
-                    <p>هذه الأخبار مخزنة في قاعدة بيانات Firestore ويمكن للجميع رؤيتها. يمكنك إضافة، تعديل أو حذف الأخبار.</p>
-                    <div class="controls">
-                        <button class="btn-primary" id="showEditorBtn2">إضافة خبر جديد</button>
-                        <button class="btn-danger" id="clearBtn">حذف كل الأخبار</button>
-                    </div>
-                </div>
+<main>
+  <!-- الرئيسية -->
+  <section id="view-home">
+    <div class="card">
+      <h3 style="margin-top:0">مرحباً بكم</h3>
+      <p style="margin:0;color:#555;font-size:14px;">نظام إدارة اشتراكات الأفراد في الصندوق.</p>
+    </div>
+    <div class="card stat"><span>👥 عدد الأفراد</span><span class="big" id="homeCount">0</span></div>
+    <div class="card stat"><span>💰 مجموع الاشتراكات</span><span class="big" id="homeSubs">0</span></div>
+  </section>
 
-                <div id="editor">
-                    <div class="form-group">
-                        <label for="title">عنوان الخبر</label>
-                        <input type="text" id="title" placeholder="أدخل عنوان الخبر">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="category">التصنيف</label>
-                        <select id="category">
-                            <option value="عام">عام</option>
-                            <option value="سياسة">سياسة</option>
-                            <option value="اقتصاد">اقتصاد</option>
-                            <option value="رياضة">رياضة</option>
-                            <option value="تكنولوجيا">تكنولوجيا</option>
-                            <option value="صحة">صحة</option>
-                            <option value="فن وثقافة">فن وثقافة</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="content">نص الخبر</label>
-                        <textarea id="content" placeholder="أدخل نص الخبر"></textarea>
-                    </div>
-                    
-                    <div class="actions">
-                        <button class="btn-primary" id="saveBtn">حفظ ونشر</button>
-                        <button class="btn-secondary" id="cancelBtn">إلغاء</button>
-                    </div>
-                </div>
+  <!-- إضافة فرد -->
+  <section id="view-add" class="hidden">
+    <div class="card">
+      <h3 style="margin-top:0">➕ إضافة فرد</h3>
+      <label>الاسم الكامل</label>
+      <input id="inName" placeholder="مثال: أحمد محمد">
+      <label>رقم العضو</label>
+      <input id="inNumber" placeholder="مثال: 001">
+      <label>تاريخ الانتساب</label>
+      <input type="date" id="inDate">
+      <label>صورة (اختياري)</label>
+      <input type="file" id="inPhoto" accept="image/*">
+      <button class="primary" onclick="addMember()">💾 حفظ</button>
+    </div>
+  </section>
 
-                <div id="posts">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <p>جاري تحميل الأخبار...</p>
-                    </div>
-                </div>
-            </div>
+  <!-- قائمة الأفراد -->
+  <section id="view-members" class="hidden">
+    <div class="card">
+      <h3 style="margin-top:0">👥 قائمة الأفراد</h3>
+      <input id="searchBox" placeholder="🔍 بحث بالاسم أو الرقم..." oninput="renderMembers()">
+    </div>
+    <div id="membersList"></div>
+  </section>
 
-            <!-- Sidebar -->
-            <div class="sidebar">
-                <div class="sidebar-section">
-                    <h3>التصنيفات</h3>
-                    <ul class="categories-list" id="categoriesList">
-                        <!-- سيتم ملؤها ديناميكياً -->
-                    </ul>
-                </div>
-                
-                <div class="sidebar-section">
-                    <h3>عن الموقع</h3>
-                    <p>موقع أقورط هو منصة إخبارية متكاملة تهدف إلى تقديم الأخبار بدقة ومهنية، مع التركيز على المصداقية والموضوعية في الطرح.</p>
-                </div>
-                
-                <div class="sidebar-section">
-                    <h3>معلومات المطور</h3>
-                    <p><strong>البريد الإلكتروني:</strong> Ajeajmar66@gmail.com</p>
-                    <p><strong>واتساب:</strong> <a href="https://wa.me/message/VU2AQBKCUASVA1" target="_blank">راسلنا على واتساب</a></p>
-                </div>
-            </div>
-        </div>
-        
-        <p class="note">جميع الأخبار مخزنة في قاعدة بيانات Firestore ويمكن للجميع رؤيتها من أي جهاز.</p>
+  <!-- الملف الشخصي -->
+  <section id="view-profile" class="hidden">
+    <div class="card" id="profileInfo"></div>
+
+    <div class="card">
+      <h4 style="margin-top:0">💰 الاشتراكات</h4>
+      <div id="profileSubs"></div>
+      <div class="row" style="margin-top:10px">
+        <input id="subAmount" type="number" placeholder="المبلغ" value="100">
+        <select id="subType">
+          <option value="شهري">شهري</option>
+          <option value="سنوي">سنوي</option>
+        </select>
+      </div>
+      <button class="primary" onclick="addSub()">➕ إضافة اشتراك</button>
     </div>
 
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>عن أقورط</h3>
-                    <p>منصة إخبارية تقدم آخر الأخبار والمستجدات من جميع أنحاء العالم بدقة ومهنية.</p>
-                </div>
-                
-                <div class="footer-section">
-                    <h3>روابط سريعة</h3>
-                    <a href="#">الرئيسية</a>
-                    <a href="#">الأخبار العاجلة</a>
-                    <a href="#">مقالات الرأي</a>
-                    <a href="#">منوعات</a>
-                </div>
-                
-                <div class="footer-section">
-                    <h3>اتصل بنا</h3>
-                    <p>البريد الإلكتروني: Ajeajmar66@gmail.com</p>
-                    <a href="https://wa.me/message/VU2AQBKCUASVA1" target="_blank">راسلنا على واتساب</a>
-                </div>
-            </div>
-            
-            <div class="copyright">
-                <p>جميع الحقوق محفوظة &copy; 2023 أقورط - تم التطوير بواسطة أج آجمار</p>
-            </div>
-        </div>
-    </footer>
+    <div class="card">
+      <button class="primary danger" onclick="deleteMember()">🗑️ حذف هذا الفرد</button>
+    </div>
+    <button class="primary secondary" onclick="showView('members')">⬅ رجوع للقائمة</button>
+  </section>
 
-    <script>
-        // Firebase configuration - استبدل هذه القيم بتكوين مشروعك الخاص
-        const firebaseConfig = {
-            apiKey: "AIzaSyA5p6bLxXq9V3h7Z8Y9v0w1r2s3t4u5v6w7",
-            authDomain: "aqwart-news.firebaseapp.com",
-            projectId: "aqwart-news",
-            storageBucket: "aqwart-news.appspot.com",
-            messagingSenderId: "123456789012",
-            appId: "1:123456789012:web:abcdef123456"
-        };
+  <!-- الإحصائيات -->
+  <section id="view-stats" class="hidden">
+    <div class="card">
+      <h3 style="margin-top:0">📊 الإحصائيات</h3>
+      <div class="stat"><span>👥 عدد الأفراد</span><span class="big" id="statCount">0</span></div>
+      <div class="stat"><span>💰 مجموع الاشتراكات</span><span class="big" id="statSubs">0</span></div>
+    </div>
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+    <div class="card">
+      <h3 style="margin-top:0">📋 كل الاشتراكات</h3>
+      <textarea id="allSubsText" readonly></textarea>
+      <button class="primary" onclick="copyAll()">📋 نسخ الكل</button>
+    </div>
 
-        // DOM Elements
-        const postsEl = document.getElementById('posts');
-        const showEditorBtn = document.getElementById('showEditorBtn');
-        const showEditorBtn2 = document.getElementById('showEditorBtn2');
-        const editor = document.getElementById('editor');
-        const saveBtn = document.getElementById('saveBtn');
-        const cancelBtn = document.getElementById('cancelBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const titleInp = document.getElementById('title');
-        const contentInp = document.getElementById('content');
-        const categoryInp = document.getElementById('category');
-        const searchInput = document.getElementById('searchInput');
-        const categoriesList = document.getElementById('categoriesList');
+    <div class="card">
+      <button class="primary secondary" onclick="resetAll()">⚠️ حذف جميع البيانات</button>
+    </div>
+  </section>
+</main>
 
-        let posts = [];
-        let filteredPosts = [];
-        let editingPostId = null;
+<div class="toast" id="toast"></div>
 
-        // Utility function to escape HTML
-        function escapeHtml(s) { 
-            return (s || '').replace(/[&<>"']/g, c => 
-                ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]
-            ); 
-        }
+<script>
+/* ==================== البيانات ==================== */
+const STORAGE_KEY = 'takaful_members_ahl_lfrig';
+let members = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+let currentIndex = -1;
 
-        // Load posts from Firestore
-        function loadPosts() {
-            postsEl.innerHTML = `
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>جاري تحميل الأخبار...</p>
-                </div>
-            `;
-            
-            db.collection("posts")
-                .orderBy("date", "desc")
-                .onSnapshot((snapshot) => {
-                    posts = [];
-                    snapshot.forEach((doc) => {
-                        const post = doc.data();
-                        post.id = doc.id;
-                        posts.push(post);
-                    });
-                    
-                    filteredPosts = [...posts];
-                    render();
-                }, (error) => {
-                    console.error("Error loading posts: ", error);
-                    postsEl.innerHTML = `
-                        <div class="empty-state">
-                            <i>⚠️</i>
-                            <p>حدث خطأ في تحميل الأخبار. يرجى المحاولة مرة أخرى.</p>
-                        </div>
-                    `;
-                });
-        }
+/* أرقام بالفرنسية (غربية) */
+function fmt(n){ return Number(n).toLocaleString('fr-FR'); }
 
-        // Render posts to the DOM
-        function render() {
-            if (filteredPosts.length === 0) {
-                postsEl.innerHTML = `
-                    <div class="empty-state">
-                        <i>📰</i>
-                        <p>لا توجد أخبار بعد. اضغط "إضافة خبر جديد" للبدء.</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            postsEl.innerHTML = filteredPosts.map((p, i) => `
-                <div class="post fade-in" data-id="${p.id}">
-                    <h3>${escapeHtml(p.title)}</h3>
-                    <div class="post-meta">
-                        <span>${new Date(p.date.seconds * 1000).toLocaleString('ar-EG')}</span>
-                        <span class="post-category">${p.category}</span>
-                    </div>
-                    <div class="post-body">${escapeHtml(p.content).replace(/\n/g, '<br>')}</div>
-                    <div class="post-actions">
-                        <button class="btn-secondary btn-small" onclick="editPost('${p.id}')">تعديل</button>
-                        <button class="btn-danger btn-small" onclick="deletePost('${p.id}')">حذف</button>
-                    </div>
-                </div>
-            `).join('');
-            
-            updateCategoriesList();
-        }
+/* ==================== أدوات ==================== */
+function toast(msg, ok=true){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = ok ? '#2e8b57' : '#c0392b';
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(members)); }
 
-        // Update categories list in sidebar
-        function updateCategoriesList() {
-            const categories = {};
-            posts.forEach(post => {
-                categories[post.category] = (categories[post.category] || 0) + 1;
-            });
-            
-            categoriesList.innerHTML = Object.entries(categories)
-                .map(([category, count]) => `
-                    <li>
-                        <a href="#" onclick="filterByCategory('${category}'); return false;">
-                            ${category}
-                            <span class="category-count">${count}</span>
-                        </a>
-                    </li>
-                `).join('');
-                
-            // Add "الكل" option
-            categoriesList.innerHTML = `
-                <li>
-                    <a href="#" onclick="clearFilter(); return false;">
-                        الكل
-                        <span class="category-count">${posts.length}</span>
-                    </a>
-                </li>
-            ` + categoriesList.innerHTML;
-        }
+/* ==================== التنقل ==================== */
+function showView(v){
+  ['home','add','members','profile','stats'].forEach(id=>{
+    const el = document.getElementById('view-'+id);
+    if(el) el.classList.toggle('hidden', id!==v);
+  });
+  document.querySelectorAll('nav button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.view === v);
+  });
+  if(v==='members') renderMembers();
+  if(v==='home') refreshStats();
+  if(v==='stats'){ refreshStats(); buildAllSubsText(); }
+  if(v==='profile') renderProfile();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
 
-        // Filter posts by category
-        function filterByCategory(category) {
-            filteredPosts = posts.filter(post => post.category === category);
-            render();
-        }
+/* ==================== الإحصائيات ==================== */
+function refreshStats(){
+  let subs = 0;
+  members.forEach(m=>{
+    (m.subscriptions || []).forEach(s => subs += Number(s.amount) || 0);
+  });
+  const set = (id,val)=>{ const e=document.getElementById(id); if(e) e.innerText=val; };
+  set('homeCount', fmt(members.length));
+  set('homeSubs', fmt(subs));
+  set('statCount', fmt(members.length));
+  set('statSubs', fmt(subs));
+}
 
-        // Clear filter and show all posts
-        function clearFilter() {
-            filteredPosts = [...posts];
-            searchInput.value = '';
-            render();
-        }
+/* ==================== إضافة فرد ==================== */
+function addMember(){
+  const name   = document.getElementById('inName').value.trim();
+  const number = document.getElementById('inNumber').value.trim();
+  const date   = document.getElementById('inDate').value;
+  const photoFile = document.getElementById('inPhoto').files[0];
 
-        // Search functionality
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            filteredPosts = posts.filter(post => 
-                post.title.toLowerCase().includes(searchTerm) || 
-                post.content.toLowerCase().includes(searchTerm)
-            );
-            render();
-        });
+  if(!name || !number){ toast('يرجى ملء الاسم والرقم', false); return; }
+  if(members.some(m => m.number === number)){
+    toast('رقم العضو مستخدم مسبقاً', false); return;
+  }
 
-        // Show editor
-        function showEditor() {
-            editor.style.display = 'block';
-            titleInp.focus();
-        }
+  const finish = (photoData) => {
+    members.push({
+      name, number,
+      date: date || new Date().toISOString().slice(0,10),
+      photo: photoData || '',
+      subscriptions: []
+    });
+    saveData();
+    document.getElementById('inName').value = '';
+    document.getElementById('inNumber').value = '';
+    document.getElementById('inDate').value = '';
+    document.getElementById('inPhoto').value = '';
+    toast('✅ تمت إضافة الفرد بنجاح');
+    showView('members');
+  };
 
-        // Hide editor and reset form
-        function hideEditor() {
-            editor.style.display = 'none';
-            titleInp.value = '';
-            contentInp.value = '';
-            categoryInp.value = 'عام';
-            editingPostId = null;
-        }
+  if(photoFile){
+    const reader = new FileReader();
+    reader.onload = e => finish(e.target.result);
+    reader.readAsDataURL(photoFile);
+  } else {
+    finish('');
+  }
+}
 
-        // Save new post or update existing one
-        function savePost() {
-            const title = titleInp.value.trim() || 'خبر بدون عنوان';
-            const content = contentInp.value.trim() || '';
-            const category = categoryInp.value;
-            
-            const postData = { 
-                title, 
-                content, 
-                category,
-                date: firebase.firestore.FieldValue.serverTimestamp()
-            };
-            
-            if (editingPostId) {
-                // Update existing post
-                db.collection("posts").doc(editingPostId).update(postData)
-                    .then(() => {
-                        console.log("Post updated successfully");
-                        hideEditor();
-                    })
-                    .catch((error) => {
-                        console.error("Error updating post: ", error);
-                        alert("حدث خطأ أثناء تحديث الخبر. يرجى المحاولة مرة أخرى.");
-                    });
-            } else {
-                // Add new post
-                db.collection("posts").add(postData)
-                    .then(() => {
-                        console.log("Post added successfully");
-                        hideEditor();
-                    })
-                    .catch((error) => {
-                        console.error("Error adding post: ", error);
-                        alert("حدث خطأ أثناء إضافة الخبر. يرجى المحاولة مرة أخرى.");
-                    });
-            }
-        }
+/* ==================== قائمة الأفراد ==================== */
+function renderMembers(){
+  const box = document.getElementById('membersList');
+  const q = (document.getElementById('searchBox').value || '').trim();
+  const filtered = members.map((m,i)=>({m,i})).filter(({m})=>{
+    if(!q) return true;
+    return m.name.includes(q) || (m.number||'').includes(q);
+  });
 
-        // Edit post
-        function editPost(id) {
-            const post = posts.find(p => p.id === id);
-            if (!post) return;
-            
-            titleInp.value = post.title;
-            contentInp.value = post.content;
-            categoryInp.value = post.category;
-            editingPostId = id;
-            
-            showEditor();
-        }
+  if(!filtered.length){
+    box.innerHTML = '<div class="card empty">لا توجد أفراد مسجلون بعد</div>';
+    return;
+  }
+  box.innerHTML = filtered.map(({m,i})=>`
+    <div class="member" onclick="openProfile(${i})">
+      ${m.photo
+        ? `<img src="${m.photo}" alt="">`
+        : `<div class="avatar-sm">👤</div>`}
+      <div class="info">
+        <b>${m.name}</b>
+        <small>رقم: ${m.number} &nbsp;|&nbsp; انتساب: ${m.date || '-'}</small>
+      </div>
+    </div>
+  `).join('');
+}
 
-        // Delete post
-        function deletePost(id) {
-            if (!confirm('هل أنت متأكد أنك تريد حذف هذا الخبر؟')) return;
-            
-            db.collection("posts").doc(id).delete()
-                .then(() => {
-                    console.log("Post deleted successfully");
-                })
-                .catch((error) => {
-                    console.error("Error deleting post: ", error);
-                    alert("حدث خطأ أثناء حذف الخبر. يرجى المحاولة مرة أخرى.");
-                });
-        }
+/* ==================== الملف الشخصي ==================== */
+function openProfile(i){
+  currentIndex = i;
+  showView('profile');
+}
 
-        // Clear all posts
-        function clearAllPosts() {
-            if (!confirm('هل أنت متأكد أنك تريد حذف كل الأخبار؟ هذا الإجراء لا يمكن التراجع عنه.')) return;
-            
-            // Delete all posts one by one
-            const deletePromises = posts.map(post => 
-                db.collection("posts").doc(post.id).delete()
-            );
-            
-            Promise.all(deletePromises)
-                .then(() => {
-                    console.log("All posts deleted successfully");
-                })
-                .catch((error) => {
-                    console.error("Error deleting posts: ", error);
-                    alert("حدث خطأ أثناء حذف الأخبار. يرجى المحاولة مرة أخرى.");
-                });
-        }
+function renderProfile(){
+  const m = members[currentIndex];
+  if(!m){ showView('members'); return; }
 
-        // Event Listeners
-        showEditorBtn.addEventListener('click', showEditor);
-        showEditorBtn2.addEventListener('click', showEditor);
-        cancelBtn.addEventListener('click', hideEditor);
-        saveBtn.addEventListener('click', savePost);
-        clearBtn.addEventListener('click', clearAllPosts);
+  document.getElementById('profileInfo').innerHTML = `
+    ${m.photo
+      ? `<img class="avatar" src="${m.photo}" alt="">`
+      : `<div class="avatar-big">👤</div>`}
+    <h3 style="text-align:center;margin:6px 0">${m.name}</h3>
+    <div class="stat"><span>رقم العضو</span><b>${m.number}</b></div>
+    <div class="stat"><span>تاريخ الانتساب</span><b>${m.date || '-'}</b></div>
+  `;
 
-        // Initialize the page
-        loadPosts();
-    </script>
+  const subsBox = document.getElementById('profileSubs');
+  if(!m.subscriptions || !m.subscriptions.length){
+    subsBox.innerHTML = '<div class="empty">لا توجد اشتراكات</div>';
+  } else {
+    subsBox.innerHTML = m.subscriptions.map(s=>`
+      <div class="item">
+        <span>${s.type || 'اشتراك'} — ${s.date}</span>
+        <span><b>${fmt(s.amount)}</b> أوقية</span>
+      </div>
+    `).join('');
+  }
+}
+
+/* ==================== إضافة اشتراك ==================== */
+function addSub(){
+  const amount = Number(document.getElementById('subAmount').value);
+  const type   = document.getElementById('subType').value;
+  if(!amount || amount <= 0){ toast('أدخل مبلغاً صحيحاً', false); return; }
+
+  const m = members[currentIndex];
+  m.subscriptions = m.subscriptions || [];
+  m.subscriptions.push({
+    amount, type,
+    date: new Date().toLocaleDateString('fr-FR')
+  });
+  saveData();
+  renderProfile();
+  refreshStats();
+  toast('✅ تمت إضافة الاشتراك');
+}
+
+/* ==================== حذف ==================== */
+function deleteMember(){
+  if(!confirm('هل تريد حذف هذا الفرد وجميع اشتراكاته نهائياً؟')) return;
+  members.splice(currentIndex, 1);
+  saveData();
+  refreshStats();
+  showView('members');
+  toast('🗑️ تم الحذف');
+}
+
+/* ==================== نص كل الاشتراكات ==================== */
+function buildAllSubsText(){
+  let out = 'قائمة اشتراكات الأفراد\n';
+  out += '====================\n';
+  let total = 0;
+  members.forEach(m=>{
+    out += `\n👤 ${m.name} (رقم: ${m.number})\n`;
+    if(!m.subscriptions || !m.subscriptions.length){
+      out += '   - لا توجد اشتراكات\n';
+    } else {
+      m.subscriptions.forEach(s=>{
+        out += `   - ${s.type || 'اشتراك'} | ${s.date} | ${fmt(s.amount)} أوقية\n`;
+        total += Number(s.amount) || 0;
+      });
+    }
+  });
+  out += '\n====================\n';
+  out += `المجموع الكلي: ${fmt(total)} أوقية\n`;
+  out += `عدد الأفراد: ${fmt(members.length)}\n`;
+  document.getElementById('allSubsText').value = out;
+}
+
+function copyAll(){
+  const txt = document.getElementById('allSubsText').value;
+  if(!txt){ toast('لا يوجد نص لنسخه', false); return; }
+
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(()=>{
+      toast('📋 تم نسخ كل الاشتراكات');
+    }).catch(()=>{
+      // بديل
+      const ta = document.getElementById('allSubsText');
+      ta.select();
+      document.execCommand('copy');
+      toast('📋 تم النسخ');
+    });
+  } else {
+    const ta = document.getElementById('allSubsText');
+    ta.select();
+    document.execCommand('copy');
+    toast('📋 تم النسخ');
+  }
+}
+
+/* ==================== حذف الكل ==================== */
+function resetAll(){
+  if(!confirm('سيتم حذف جميع الأفراد والاشتراكات نهائياً. هل أنت متأكد؟')) return;
+  if(!confirm('تأكيد نهائي: حذف كل شيء؟')) return;
+  members = [];
+  saveData();
+  refreshStats();
+  renderMembers();
+  buildAllSubsText();
+  toast('🗑️ تم حذف جميع البيانات');
+}
+
+/* ==================== تشغيل ==================== */
+window.addEventListener('DOMContentLoaded', ()=>{
+  refreshStats();
+  renderMembers();
+  showView('home');
+});
+</script>
+
 </body>
 </html>
