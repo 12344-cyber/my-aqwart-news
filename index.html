@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Aje ajmar - تصوير مباشر فيديو</title>
+<title>Aje ajmar - تصوير مباشر + موسيقى</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}body{background:#021533;font-family:Cairo,sans-serif;padding:10px;color:#fff;margin:0}
@@ -15,7 +15,7 @@ input[type=text]{width:100%;padding:11px;border-radius:10px;border:1px solid #16
 input[type=file]{width:100%;padding:8px;background:#04122a;border-radius:10px}
 input[type=range]{width:100%;accent-color:#00e5ff}
 button{padding:13px;border:none;border-radius:12px;font-weight:900;font-family:Cairo,sans-serif;cursor:pointer;font-size:15px;width:100%;margin-top:8px}
-.b1{background:#00e5ff;color:#021533}.b2{background:#9c27b0;color:#fff}.b3{background:#ff4757;color:#fff}.b4{background:#0e3a5a;color:#fff;border:1px solid #00e5ff}.b5{background:#ffc107;color:#000}
+.b1{background:#00e5ff;color:#021533}.b2{background:#9c27b0;color:#fff}.b3{background:#ff4757;color:#fff}.b4{background:#0e3a5a;color:#fff;border:1px solid #00e5ff}.b5{background:#ffc107;color:#000}.bMusic{background:#00b894;color:#fff}
 canvas{width:100%;border-radius:12px;background:#000;display:block}
 .status{padding:10px;border-radius:10px;text-align:center;font-size:13px;font-weight:700;margin-top:10px;background:#04122a;border:1px solid #164a6b}
 .ok{color:#00e5ff}.err{color:#ff4757}.busy{color:#ffc107}
@@ -24,17 +24,18 @@ canvas{width:100%;border-radius:12px;background:#000;display:block}
 #realCam{width:100%;border-radius:12px;background:#000;display:block;transform:scaleX(-1)}
 #realCam.back{transform:scaleX(1)}
 .count{font-size:40px;font-weight:900;text-align:center;color:#fff;display:none}.count.show{display:block}
+.musicBox{background:#04122a;border:1px solid #00b894;border-radius:12px;padding:12px;margin-top:10px}
 </style>
 </head>
 <body>
 <div class="box">
 <div class="card">
-<h3>🎥 التصوير المباشر فيديو - Aje ajmar</h3>
+<h3>🎥 التصوير المباشر + الموسيقى - Aje ajmar</h3>
 <label>نص الخبر (السطر الأول أبيض والباقي أزرق)</label><input type="text" id="fullText" value="تغطية مباشرة من عين المكان" maxlength="110">
 <label>اسم الصفحة</label><input type="text" id="pageName" value="أجه آجمار">
 <label>الاسم بالأسفل</label><input type="text" id="fixedName" value="Aje ajmar">
 <label>الهاتف</label><input type="text" id="phoneText" value="26361821">
-<label>شعار الصفحة (اختياري - يستبدل الأيقونة)</label><input type="file" id="logoUp" accept="image/*">
+<label>شعار الصفحة (اختياري)</label><input type="file" id="logoUp" accept="image/*">
 
 <h3>📸 الكاميرا الأصلية - يجب أن ترى نفسك هنا</h3>
 <video id="realCam" playsinline autoplay muted></video>
@@ -44,21 +45,38 @@ canvas{width:100%;border-radius:12px;background:#000;display:block}
 </div>
 <label>🔍 تقريب: <span id="zoomVal">1.0×</span></label>
 <input type="range" id="camZoom" min="1" max="3" step="0.1" value="1">
-<label>🔊 قوة الصوت: <span id="volVal">1.2×</span></label>
+
+<!-- ===== قسم الموسيقى أثناء التصوير المباشر ===== -->
+<div class="musicBox">
+<h3 style="color:#00b894;margin:0">🎵 الموسيقى أثناء التصوير المباشر</h3>
+<label>اختر ملف الموسيقى (MP3)</label>
+<input type="file" id="musicFile" accept="audio/*">
+<label>🎵 قوة الموسيقى: <span id="musicVolVal" style="color:#00b894">20%</span> <span style="font-size:11px;color:#888">- لا تزيدها عن 25% باش ما تغطي على صوتك</span></label>
+<input type="range" id="musicVol" min="0" max="100" step="1" value="20">
+<label>🎤 قوة صوتك: <span id="volVal">1.2×</span></label>
 <input type="range" id="micVol" min="0.5" max="2" step="0.1" value="1.2">
-<div style="font-size:12px;color:#b8d0e8"><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="optCD" checked style="width:18px;height:18px"> عد تنازلي 3-2-1 قبل التسجيل</label></div>
+<div class="row">
+<button class="bMusic" id="btnMusicPlay">▶ تشغيل الموسيقى</button>
+<button class="b4" id="btnMusicStop">⏸ إيقاف الموسيقى</button>
+</div>
+<label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="optDucking" checked style="width:18px;height:18px"> ✅ لما أتكلم، الموسيقى تنقص وحدها تلقائيا</label>
+<label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="optMusicLoop" checked style="width:18px;height:18px"> 🔁 إعادة الموسيقى تلقائيا إذا انتهت</label>
+<p id="musicStatus" style="font-size:12px;color:#00b894;margin:4px 0 0">لم يتم اختيار موسيقى بعد - إذا ما اخترت موسيقى، التسجيل راح يكون بصوتك فقط</p>
+</div>
+
+<div style="font-size:12px;color:#b8d0e8;margin-top:8px"><label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="optCD" checked style="width:18px;height:18px"> عد تنازلي 3-2-1 قبل التسجيل</label></div>
 
 <h3>🎬 التسجيل المباشر</h3>
 <div class="count" id="count">3</div>
-<button class="b2" id="btnStart">🎬 بدء التسجيل المباشر</button>
+<button class="b2" id="btnStart">🎬 بدء التسجيل المباشر + الموسيقى</button>
 <div class="row3">
 <button class="b5" id="btnPause" style="display:none">⏸️ إيقاف مؤقت</button>
 <button class="b3" id="btnStop" style="display:none">⏹️ إيقاف</button>
 <button class="b1" id="btnDownload" style="display:none">⬇️ تحميل</button>
 </div>
 <div class="timer" id="timer">00:00</div>
-<div class="status" id="status">1- اضغط تشغيل الكاميرا<br>2- اسمح بالكاميرا والميكروفون<br>3- اضغط بدء التسجيل - سينتهي لما تضغط إيقاف</div>
-<div style="font-size:12px;color:#7a9bbf;margin-top:8px">⚠️ افتح في Chrome وليس داخل واتساب. في واتساب: النقاط الثلاثة ← فتح في المتصفح</div>
+<div class="status" id="status">1- اضغط تشغيل الكاميرا<br>2- اختر الموسيقى (اختياري)<br>3- اضغط بدء التسجيل - سينتهي لما تضغط إيقاف</div>
+<div style="font-size:12px;color:#7a9bbf;margin-top:8px">⚠️ افتح في Chrome وليس داخل واتساب. في واتساب: النقاط الثلاثة ← فتح في المتصفح<br>⚠️ لا تشغل الموسيقى من تلفون ثاني - اخترها هنا داخل النظام، هو يدمجها نظيفة بدون صدى</div>
 </div>
 
 <div class="card"><h3>👁️ المعاينة النهائية</h3><canvas id="c" width="1080" height="1080"></canvas><div id="debug" style="text-align:center;font-size:12px;color:#ffc107;margin-top:6px">بانتظار تشغيل الكاميرا...</div></div>
@@ -80,7 +98,7 @@ const { fetchFile } = FFmpegUtil;
 
 async function loadFFmpeg(){
   if(ffmpeg) return ffmpeg;
-  setStatus('busy','⏳ جاري تحميل محول الفيديو (قد يستغرق بعض الوقت)...');
+  setStatus('busy','⏳ جاري تحميل محول الفيديو...');
   ffmpeg=new FFmpeg();
   ffmpeg.on('log',({message})=>console.log(message));
   const baseURL='https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
@@ -90,137 +108,53 @@ async function loadFFmpeg(){
   });
   return ffmpeg;
 }
-
 async function convertToMp4(webmBlob){
   try{
     const ff=await loadFFmpeg();
     setStatus('busy','⏳ جاري تحويل الفيديو إلى MP4 المتوافق مع واتساب...');
-    const inputName='input.webm';
-    const outputName='output.mp4';
+    const inputName='input.webm'; const outputName='output.mp4';
     await ff.writeFile(inputName, await fetchFile(webmBlob));
-    await ff.exec([
-      '-i', inputName,
-      '-c:v','libx264',
-      '-preset','ultrafast',
-      '-crf','23',
-      '-pix_fmt','yuv420p',
-      '-c:a','aac',
-      '-b:a','128k',
-      '-movflags','+faststart',
-      outputName
-    ]);
+    await ff.exec(['-i',inputName,'-c:v','libx264','-preset','ultrafast','-crf','23','-pix_fmt','yuv420p','-c:a','aac','-b:a','128k','-movflags','+faststart',outputName]);
     const data=await ff.readFile(outputName);
-    await ff.deleteFile(inputName);
-    await ff.deleteFile(outputName);
+    await ff.deleteFile(inputName); await ff.deleteFile(outputName);
     return new Blob([data.buffer],{type:'video/mp4'});
-  }catch(err){
-    console.error('Conversion error:',err);
-    throw new Error('فشل تحويل الفيديو إلى MP4. قد يكون المتصفح لا يدعم هذه العملية أو أن الذاكرة غير كافية.');
-  }
+  }catch(err){ console.error(err); throw new Error('فشل تحويل الفيديو إلى MP4.'); }
 }
-
 function setStatus(cls,msg){statusEl.className='status '+cls; statusEl.innerHTML=msg;}
 
 /* ---------- أدوات الرسم ---------- */
 function rr(a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.lineTo(a+w-r,b);x.quadraticCurveTo(a+w,b,a+w,b+r);x.lineTo(a+w,b+h-r);x.quadraticCurveTo(a+w,b+h,a+w-r,b+h);x.lineTo(a+r,b+h);x.quadraticCurveTo(a,b+h,a,b+h-r);x.lineTo(a,b+r);x.quadraticCurveTo(a,b,a+r,b);x.closePath();}
 function poly(p){x.beginPath();x.moveTo(p[0][0],p[0][1]);for(let i=1;i<p.length;i++)x.lineTo(p[i][0],p[i][1]);x.closePath();}
 function glow(c,b){x.shadowColor=c;x.shadowBlur=b;}
-function person(cx,cy,s){
-  let g=x.createLinearGradient(0,cy-s/2,0,cy+s/2);g.addColorStop(0,'#35e0ff');g.addColorStop(1,'#00a9e8');
-  x.fillStyle=g;
-  x.beginPath();x.arc(cx,cy-s*0.2,s*0.26,0,Math.PI*2);x.fill();
-  x.beginPath();x.moveTo(cx-s*0.5,cy+s*0.5);
-  x.bezierCurveTo(cx-s*0.5,cy+s*0.12,cx-s*0.3,cy+s*0.1,cx,cy+s*0.1);
-  x.bezierCurveTo(cx+s*0.3,cy+s*0.1,cx+s*0.5,cy+s*0.12,cx+s*0.5,cy+s*0.5);
-  x.closePath();x.fill();
-}
-function logoOrIcon(cx,cy,s){
-  if(logoImg){
-    let r=s/2;
-    x.save();x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.clip();
-    let m=Math.min(logoImg.width,logoImg.height);
-    x.drawImage(logoImg,(logoImg.width-m)/2,(logoImg.height-m)/2,m,m,cx-r,cy-r,s,s);
-    x.restore();
-    x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.strokeStyle=CY;x.lineWidth=3;x.stroke();
-  }else person(cx,cy,s);
-}
-function circleIcon(cx,cy){
-  x.beginPath();x.arc(cx,cy,35,0,Math.PI*2);
-  x.fillStyle='rgba(0,229,255,0.12)';x.fill();
-  x.save();glow(CY,10);x.strokeStyle=CY;x.lineWidth=3;x.stroke();x.restore();
-}
+function person(cx,cy,s){let g=x.createLinearGradient(0,cy-s/2,0,cy+s/2);g.addColorStop(0,'#35e0ff');g.addColorStop(1,'#00a9e8');x.fillStyle=g;x.beginPath();x.arc(cx,cy-s*0.2,s*0.26,0,Math.PI*2);x.fill();x.beginPath();x.moveTo(cx-s*0.5,cy+s*0.5);x.bezierCurveTo(cx-s*0.5,cy+s*0.12,cx-s*0.3,cy+s*0.1,cx,cy+s*0.1);x.bezierCurveTo(cx+s*0.3,cy+s*0.1,cx+s*0.5,cy+s*0.12,cx+s*0.5,cy+s*0.5);x.closePath();x.fill();}
+function logoOrIcon(cx,cy,s){if(logoImg){let r=s/2;x.save();x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.clip();let m=Math.min(logoImg.width,logoImg.height);x.drawImage(logoImg,(logoImg.width-m)/2,(logoImg.height-m)/2,m,m,cx-r,cy-r,s,s);x.restore();x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.strokeStyle=CY;x.lineWidth=3;x.stroke();}else person(cx,cy,s);}
+function circleIcon(cx,cy){x.beginPath();x.arc(cx,cy,35,0,Math.PI*2);x.fillStyle='rgba(0,229,255,0.12)';x.fill();x.save();glow(CY,10);x.strokeStyle=CY;x.lineWidth=3;x.stroke();x.restore();}
 function iconFB(cx,cy){circleIcon(cx,cy);x.fillStyle='#fff';x.font='900 50px Cairo, Arial, sans-serif';x.textAlign='center';x.textBaseline='middle';x.direction='ltr';x.fillText('f',cx+2,cy+6);}
 function iconIG(cx,cy){circleIcon(cx,cy);x.strokeStyle='#fff';x.lineWidth=3.5;rr(cx-16,cy-16,32,32,9);x.stroke();x.beginPath();x.arc(cx,cy,7.5,0,Math.PI*2);x.stroke();x.fillStyle='#fff';x.beginPath();x.arc(cx+10,cy-10,2.4,0,Math.PI*2);x.fill();}
 function iconYT(cx,cy){circleIcon(cx,cy);x.fillStyle='#fff';rr(cx-21,cy-15,42,30,9);x.fill();x.fillStyle='#0a3a5e';x.beginPath();x.moveTo(cx-6,cy-8);x.lineTo(cx+9,cy);x.lineTo(cx-6,cy+8);x.closePath();x.fill();}
-function iconTT(cx,cy){
-  circleIcon(cx,cy);x.lineCap='round';x.lineJoin='round';
-  function note(dx,dy,c){x.strokeStyle=c;x.lineWidth=5.5;x.beginPath();x.moveTo(cx+4+dx,cy-17+dy);x.lineTo(cx+4+dx,cy+8+dy);x.stroke();x.beginPath();x.arc(cx-3+dx,cy+9+dy,7.5,0,Math.PI*2);x.stroke();x.beginPath();x.moveTo(cx+4+dx,cy-17+dy);x.quadraticCurveTo(cx+6+dx,cy-8+dy,cx+16+dx,cy-8+dy);x.stroke();}
-  note(-2,1,'#00e5ff');note(0,0,'#fff');x.lineCap='butt';
-}
-function trace(pts){
-  x.save();x.strokeStyle='rgba(0,229,255,0.45)';x.lineWidth=2;glow(CY,8);x.beginPath();x.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)x.lineTo(pts[i][0],pts[i][1]);x.stroke();
-  x.fillStyle=CY;[pts[0],pts[pts.length-1]].forEach(p=>{x.beginPath();x.arc(p[0],p[1],4,0,Math.PI*2);x.fill();});x.restore();
-}
-function wrap(text,maxW,fs){
-  x.font='900 '+fs+'px Cairo, sans-serif';
-  let words=text.split(/\s+/).filter(Boolean),lines=[],cur='';
-  for(let w of words){let t=cur?cur+' '+w:w;if(x.measureText(t).width>maxW&&cur){lines.push(cur);cur=w;}else cur=t;}
-  if(cur)lines.push(cur);return lines;
-}
+function iconTT(cx,cy){circleIcon(cx,cy);x.lineCap='round';x.lineJoin='round';function note(dx,dy,c){x.strokeStyle=c;x.lineWidth=5.5;x.beginPath();x.moveTo(cx+4+dx,cy-17+dy);x.lineTo(cx+4+dx,cy+8+dy);x.stroke();x.beginPath();x.arc(cx-3+dx,cy+9+dy,7.5,0,Math.PI*2);x.stroke();x.beginPath();x.moveTo(cx+4+dx,cy-17+dy);x.quadraticCurveTo(cx+6+dx,cy-8+dy,cx+16+dx,cy-8+dy);x.stroke();}note(-2,1,'#00e5ff');note(0,0,'#fff');x.lineCap='butt';}
+function trace(pts){x.save();x.strokeStyle='rgba(0,229,255,0.45)';x.lineWidth=2;glow(CY,8);x.beginPath();x.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)x.lineTo(pts[i][0],pts[i][1]);x.stroke();x.fillStyle=CY;[pts[0],pts[pts.length-1]].forEach(p=>{x.beginPath();x.arc(p[0],p[1],4,0,Math.PI*2);x.fill();});x.restore();}
+function wrap(text,maxW,fs){x.font='900 '+fs+'px Cairo, sans-serif';let words=text.split(/\s+/).filter(Boolean),lines=[],cur='';for(let w of words){let t=cur?cur+' '+w:w;if(x.measureText(t).width>maxW&&cur){lines.push(cur);cur=w;}else cur=t;}if(cur)lines.push(cur);return lines;}
 
 /* ---------- الطبقة الثابتة ---------- */
 function renderStatic(){
   x=sctx; x.setTransform(S,0,0,S,0,0); x.clearRect(0,0,W,W);
-  let g=x.createLinearGradient(0,0,0,W);g.addColorStop(0,'#071c3f');g.addColorStop(1,'#020b20');
-  x.fillStyle=g;x.fillRect(0,0,W,W);
-  x.save();x.strokeStyle='rgba(0,229,255,0.06)';x.lineWidth=1;
-  for(let i=0;i<=W;i+=50){x.beginPath();x.moveTo(i,0);x.lineTo(i,W);x.stroke();x.beginPath();x.moveTo(0,i);x.lineTo(W,i);x.stroke();}
-  x.restore();
+  let g=x.createLinearGradient(0,0,0,W);g.addColorStop(0,'#071c3f');g.addColorStop(1,'#020b20');x.fillStyle=g;x.fillRect(0,0,W,W);
+  x.save();x.strokeStyle='rgba(0,229,255,0.06)';x.lineWidth=1;for(let i=0;i<=W;i+=50){x.beginPath();x.moveTo(i,0);x.lineTo(i,W);x.stroke();x.beginPath();x.moveTo(0,i);x.lineTo(W,i);x.stroke();}x.restore();
   trace([[32,300],[32,1000]]);trace([[52,420],[52,560],[34,580]]);trace([[10,1180],[10,1420]]);
   trace([[1568,330],[1568,1000]]);trace([[1548,430],[1548,640],[1566,660]]);trace([[1590,1150],[1590,1400]]);
   trace([[30,1370],[110,1370],[150,1410],[420,1410]]);trace([[1570,1360],[1480,1360],[1440,1400],[1250,1400]]);
   trace([[40,120],[100,120],[140,80]]);trace([[1560,120],[1520,120],[1490,160]]);
   x.save();glow(CY,12);x.strokeStyle='rgba(0,229,255,0.5)';x.lineWidth=3;rr(8,8,W-16,W-16,26);x.stroke();x.restore();
-
-  x.save();poly([[195,32],[1575,32],[1480,160],[110,160]]);
-  let hg=x.createLinearGradient(0,32,0,160);hg.addColorStop(0,'#0a1f45');hg.addColorStop(1,'#0b4a72');
-  x.fillStyle=hg;x.fill();glow(CY,14);x.strokeStyle=CY;x.lineWidth=3.5;x.stroke();x.restore();
-  let pt=$('pageName').value||'أجه آجمار';
-  x.font='900 80px Cairo, sans-serif';x.direction='rtl';
-  let tw=x.measureText(pt).width,total=tw+30+70,sx=800-total/2;
-  x.textAlign='center';x.textBaseline='middle';x.save();glow(CY,12);x.fillStyle='#17cfff';x.fillText(pt,sx+tw/2,98);x.restore();
-  logoOrIcon(sx+total-35,96,72);
-
-  x.fillStyle='#000';rr(85,170,1430,955,18);x.fill();
-  x.save();glow(CY,14);x.strokeStyle=CY;x.lineWidth=4;rr(85,170,1430,955,18);x.stroke();x.restore();
-
-  x.save();poly([[235,1132],[1572,1132],[1572,1330],[1455,1445],[150,1445],[28,1325]]);
-  let ng=x.createLinearGradient(0,1132,0,1445);ng.addColorStop(0,'#061836');ng.addColorStop(1,'#04122c');
-  x.fillStyle=ng;x.fill();glow(CY,10);x.strokeStyle='rgba(0,229,255,0.7)';x.lineWidth=2.5;x.stroke();x.restore();
-
-  let h1=$('fullText').value.slice(0,110).trim(),fs=92,lines=[];
-  if(h1){
-    for(fs=92;fs>=56;fs-=4){lines=wrap(h1,1380,fs);if(lines.length<=2)break;}
-    if(lines.length>3)lines=lines.slice(0,3);
-    let lh=fs*1.28,top=1132+(313-lines.length*lh)/2+lh/2+4;
-    x.font='900 '+fs+'px Cairo, sans-serif';x.direction='rtl';x.textAlign='center';x.textBaseline='middle';
-    lines.forEach((l,i)=>{
-      x.save();
-      if(i==0){x.fillStyle='#fff';glow('rgba(255,255,255,0.35)',6);}
-      else{let tg=x.createLinearGradient(300,0,1300,0);tg.addColorStop(0,'#1ea8ff');tg.addColorStop(1,'#10c0ff');x.fillStyle=tg;}
-      x.fillText(l,W/2,top+i*lh);x.restore();
-    });
-  }
-
+  x.save();poly([[195,32],[1575,32],[1480,160],[110,160]]);let hg=x.createLinearGradient(0,32,0,160);hg.addColorStop(0,'#0a1f45');hg.addColorStop(1,'#0b4a72');x.fillStyle=hg;x.fill();glow(CY,14);x.strokeStyle=CY;x.lineWidth=3.5;x.stroke();x.restore();
+  let pt=$('pageName').value||'أجه آجمار';x.font='900 80px Cairo, sans-serif';x.direction='rtl';let tw=x.measureText(pt).width,total=tw+30+70,sx=800-total/2;x.textAlign='center';x.textBaseline='middle';x.save();glow(CY,12);x.fillStyle='#17cfff';x.fillText(pt,sx+tw/2,98);x.restore();logoOrIcon(sx+total-35,96,72);
+  x.fillStyle='#000';rr(85,170,1430,955,18);x.fill();x.save();glow(CY,14);x.strokeStyle=CY;x.lineWidth=4;rr(85,170,1430,955,18);x.stroke();x.restore();
+  x.save();poly([[235,1132],[1572,1132],[1572,1330],[1455,1445],[150,1445],[28,1325]]);let ng=x.createLinearGradient(0,1132,0,1445);ng.addColorStop(0,'#061836');ng.addColorStop(1,'#04122c');x.fillStyle=ng;x.fill();glow(CY,10);x.strokeStyle='rgba(0,229,255,0.7)';x.lineWidth=2.5;x.stroke();x.restore();
+  let h1=$('fullText').value.slice(0,110).trim(),fs=92,lines=[];if(h1){for(fs=92;fs>=56;fs-=4){lines=wrap(h1,1380,fs);if(lines.length<=2)break;}if(lines.length>3)lines=lines.slice(0,3);let lh=fs*1.28,top=1132+(313-lines.length*lh)/2+lh/2+4;x.font='900 '+fs+'px Cairo, sans-serif';x.direction='rtl';x.textAlign='center';x.textBaseline='middle';lines.forEach((l,i)=>{x.save();if(i==0){x.fillStyle='#fff';glow('rgba(255,255,255,0.35)',6);}else{let tg=x.createLinearGradient(300,0,1300,0);tg.addColorStop(0,'#1ea8ff');tg.addColorStop(1,'#10c0ff');x.fillStyle=tg;}x.fillText(l,W/2,top+i*lh);x.restore();});}
   x.save();rr(50,1470,1500,100,50);x.fillStyle='rgba(2,10,29,.96)';x.fill();glow(CY,14);x.strokeStyle=CY;x.lineWidth=3;x.stroke();x.restore();
-  let cy=1520;
-  iconFB(187,cy);iconIG(289,cy);iconYT(390,cy);iconTT(490,cy);
-  let nt=$('fixedName').value||'Aje ajmar';
-  x.font='800 44px Cairo, sans-serif';x.direction='ltr';let nw=x.measureText(nt).width,gt=nw+16+40,gs=880-gt/2;
-  x.textAlign='center';x.textBaseline='middle';x.fillStyle='#e6f8ff';x.fillText(nt,gs+nw/2,cy+2);
-  logoOrIcon(gs+nw+16+20,cy,44);
-  x.font='900 46px Cairo, sans-serif';x.direction='ltr';x.textAlign='center';x.textBaseline='middle';
-  x.save();glow(CY,10);x.fillStyle='#35dcff';x.fillText($('phoneText').value||'26361821',1390,cy+2);x.restore();
+  let cy=1520;iconFB(187,cy);iconIG(289,cy);iconYT(390,cy);iconTT(490,cy);
+  let nt=$('fixedName').value||'Aje ajmar';x.font='800 44px Cairo, sans-serif';x.direction='ltr';let nw=x.measureText(nt).width,gt=nw+16+40,gs=880-gt/2;x.textAlign='center';x.textBaseline='middle';x.fillStyle='#e6f8ff';x.fillText(nt,gs+nw/2,cy+2);logoOrIcon(gs+nw+16+20,cy,44);
+  x.font='900 46px Cairo, sans-serif';x.direction='ltr';x.textAlign='center';x.textBaseline='middle';x.save();glow(CY,10);x.fillStyle='#35dcff';x.fillText($('phoneText').value||'26361821',1390,cy+2);x.restore();
   x.setTransform(1,0,0,1,0,0);x=mctx;
 }
 
@@ -228,74 +162,124 @@ function renderStatic(){
 const IX=87,IY=172,IW=1426,IH=951;
 function draw(){
   if(dirty){dirty=false;renderStatic();}
-  x=mctx;x.setTransform(1,0,0,1,0,0);x.drawImage(sc,0,0);
-  x.setTransform(S,0,0,S,0,0);
+  x=mctx;x.setTransform(1,0,0,1,0,0);x.drawImage(sc,0,0);x.setTransform(S,0,0,S,0,0);
   if(camReady&&camEl.readyState>=2&&camEl.videoWidth>0){
     if(camEl.paused)camEl.play().catch(()=>{});
-    const vw=camEl.videoWidth,vh=camEl.videoHeight,ta=IW/IH,va=vw/vh;
-    let sw=vw,sh=vh,sx=0,sy=0;
+    const vw=camEl.videoWidth,vh=camEl.videoHeight,ta=IW/IH,va=vw/vh;let sw=vw,sh=vh,sx=0,sy=0;
     if(va>ta){sw=vh*ta;sx=(vw-sw)/2;}else{sh=vw/ta;sy=(vh-sh)/2;}
     if(camZoom>1){sx+=sw*(1-1/camZoom)/2;sy+=sh*(1-1/camZoom)/2;sw/=camZoom;sh/=camZoom;}
-    x.save();rr(IX,IY,IW,IH,16);x.clip();
-    try{x.drawImage(camEl,sx,sy,sw,sh,IX,IY,IW,IH);}catch(e){}
-    x.restore();
-    $('debug').textContent=isRecording?'🔴 يصور الآن مباشرة - الكاميرا تتحرك ✅':'الكاميرا تعمل ✅ - اضغط تسجيل';
-  }else{
-    x.fillStyle='#7a9bbf';x.font='900 46px Cairo, sans-serif';x.direction='rtl';x.textAlign='center';x.textBaseline='middle';
-    x.fillText('🎥 اضغط تشغيل الكاميرا في الأعلى',800,648);
-  }
-  if(isPaused){
-    x.save();rr(IX,IY,IW,IH,16);x.clip();x.fillStyle='rgba(0,0,0,.55)';x.fillRect(IX,IY,IW,IH);x.restore();
-    x.fillStyle='#ffc107';x.font='900 90px Cairo, sans-serif';x.direction='rtl';x.textAlign='center';x.textBaseline='middle';x.fillText('⏸️ إيقاف مؤقت',800,648);
-  }
-  if(cdVal>0){
-    x.save();rr(IX,IY,IW,IH,16);x.clip();x.fillStyle='rgba(0,0,0,.5)';x.fillRect(IX,IY,IW,IH);x.restore();
-    x.fillStyle='#fff';x.font='900 360px Cairo, sans-serif';x.direction='ltr';x.textAlign='center';x.textBaseline='middle';x.fillText(cdVal,800,648);
-  }
+    x.save();rr(IX,IY,IW,IH,16);x.clip();try{x.drawImage(camEl,sx,sy,sw,sh,IX,IY,IW,IH);}catch(e){}x.restore();
+    $('debug').textContent=isRecording?'🔴 يصور الآن مباشرة + الموسيقى ✅':'الكاميرا تعمل ✅ - اضغط تسجيل';
+  }else{x.fillStyle='#7a9bbf';x.font='900 46px Cairo, sans-serif';x.direction='rtl';x.textAlign='center';x.textBaseline='middle';x.fillText('🎥 اضغط تشغيل الكاميرا في الأعلى',800,648);}
+  if(isPaused){x.save();rr(IX,IY,IW,IH,16);x.clip();x.fillStyle='rgba(0,0,0,.55)';x.fillRect(IX,IY,IW,IH);x.restore();x.fillStyle='#ffc107';x.font='900 90px Cairo, sans-serif';x.direction='rtl';x.textAlign='center';x.textBaseline='middle';x.fillText('⏸️ إيقاف مؤقت',800,648);}
+  if(cdVal>0){x.save();rr(IX,IY,IW,IH,16);x.clip();x.fillStyle='rgba(0,0,0,.5)';x.fillRect(IX,IY,IW,IH);x.restore();x.fillStyle='#fff';x.font='900 360px Cairo, sans-serif';x.direction='ltr';x.textAlign='center';x.textBaseline='middle';x.fillText(cdVal,800,648);}
   x.setTransform(1,0,0,1,0,0);
 }
-function loop(ts){
-  requestAnimationFrame(loop);
-  if(ts-lastDraw<33)return; lastDraw=ts; draw();
-  if(isRecording&&!isPaused&&stream){const tr=stream.getVideoTracks()[0]; if(tr&&tr.requestFrame)tr.requestFrame();}
-}
+function loop(ts){requestAnimationFrame(loop);if(ts-lastDraw<33)return;lastDraw=ts;draw();if(isRecording&&!isPaused&&stream){const tr=stream.getVideoTracks()[0];if(tr&&tr.requestFrame)tr.requestFrame();}}
 requestAnimationFrame(loop);
 ['fullText','pageName','fixedName','phoneText'].forEach(id=>$(id).addEventListener('input',()=>dirty=true));
-(async()=>{try{await Promise.all([document.fonts.load('900 80px Cairo','أجه آجمار'),document.fonts.load('800 44px Cairo','Aje ajmar 0123')]);}catch(e){} dirty=true;})();
-$('logoUp').addEventListener('change',e=>{
-  const f=e.target.files[0];if(!f)return;
-  const im=new Image();im.onload=()=>{logoImg=im;dirty=true;};im.src=URL.createObjectURL(f);
-});
+(async()=>{try{await Promise.all([document.fonts.load('900 80px Cairo','أجه آجمار'),document.fonts.load('800 44px Cairo','Aje ajmar 0123')]);}catch(e){}dirty=true;})();
+$('logoUp').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{logoImg=im;dirty=true;};im.src=URL.createObjectURL(f);});
 
-/* ---------- تضخيم الصوت - النسخة المعدلة الصوت النقي ---------- */
+/* ---------- الصوت + الموسيقى أثناء التصوير المباشر - النسخة الجديدة ---------- */
 let actx=null, gainNode=null, audioDest=null, boost=1.2;
+let musicAudio=null, musicSource=null, musicGain=null, analyser=null, micFilter=null, compNode=null;
+
 function setupAudio(){
   try{
     if(actx){ try{actx.close();}catch(e){} }
     actx=new (window.AudioContext||window.webkitAudioContext)();
     const src=actx.createMediaStreamSource(camStream);
 
-    // فلتر جديد: يحيد صوت المروحة والهواء والضجيج المنخفض
-    let filter = actx.createBiquadFilter();
-    filter.type='highpass';
-    filter.frequency.value=120;
+    micFilter = actx.createBiquadFilter();
+    micFilter.type='highpass'; micFilter.frequency.value=120;
 
     gainNode=actx.createGain(); gainNode.gain.value=boost;
 
-    const comp=actx.createDynamicsCompressor();
-    comp.threshold.value=-18; comp.knee.value=20; comp.ratio.value=8;
-    comp.attack.value=0.003; comp.release.value=0.2;
+    compNode=actx.createDynamicsCompressor();
+    compNode.threshold.value=-18; compNode.knee.value=20; compNode.ratio.value=8;
+    compNode.attack.value=0.003; compNode.release.value=0.2;
+
+    analyser = actx.createAnalyser(); analyser.fftSize=256;
 
     audioDest=actx.createMediaStreamDestination();
-    src.connect(filter); filter.connect(gainNode); gainNode.connect(comp); comp.connect(audioDest);
+
+    // صوتك -> فلتر -> تضخيم -> ضاغط -> محلل -> المخرج النهائي
+    src.connect(micFilter); micFilter.connect(gainNode); gainNode.connect(compNode); compNode.connect(analyser); analyser.connect(audioDest);
+
+    // إذا كانت الموسيقى مختارة من قبل، وصلها الآن
+    connectMusicToMixer();
+
+    // Ducking: لما تتكلم، الموسيقى تنقص وحدها
+    setInterval(()=>{
+      if(!analyser || !musicGain) return;
+      if(!$('optDucking').checked) return;
+      let data=new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(data);
+      let avg=data.reduce((a,b)=>a+b,0)/data.length;
+      let target = avg>30 ? 0.05 : (parseFloat($('musicVol').value)/100);
+      musicGain.gain.setTargetAtTime(target, actx.currentTime, 0.25);
+    },200);
+
   }catch(e){ audioDest=null; }
 }
+
+function connectMusicToMixer(){
+  if(!actx || !musicAudio || !audioDest) return;
+  try{
+    if(musicSource) { try{musicSource.disconnect();}catch(e){} }
+    musicSource = actx.createMediaElementSource(musicAudio);
+    musicGain = actx.createGain();
+    musicGain.gain.value = parseFloat($('musicVol').value)/100;
+    // الموسيقى تدخل في نفس المخرج النهائي مع صوتك - هذا هو الدمج أثناء التصوير
+    musicSource.connect(musicGain);
+    musicGain.connect(audioDest);
+    // لا نربطها بمكبر الصوت مباشرة، حتى لا يصير صدى - نسمعها من سماعة خفيفة فقط إذا أراد المستخدم
+    // musicGain.connect(actx.destination); // اتركها معلقة حتى لا يصير صدى
+  }catch(e){ console.log('music connect', e); }
+}
+
+$('musicFile').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  if(musicAudio) { try{musicAudio.pause();}catch(e){} }
+  musicAudio=new Audio();
+  musicAudio.src=URL.createObjectURL(f);
+  musicAudio.loop=$('optMusicLoop').checked;
+  musicAudio.preload='auto';
+  $('musicStatus').textContent='✅ الموسيقى جاهزة: '+f.name+' - اضغط تشغيل الموسيقى، ثم ابدأ التصوير';
+  if(actx) connectMusicToMixer();
+});
+$('optMusicLoop').addEventListener('change',()=>{ if(musicAudio) musicAudio.loop=$('optMusicLoop').checked; });
+
+$('btnMusicPlay').addEventListener('click', async()=>{
+  if(!musicAudio){ alert('اختر ملف الموسيقى أولا'); return; }
+  if(!actx){ alert('شغل الكاميرا أولا'); return; }
+  if(actx.state==='suspended') await actx.resume();
+  connectMusicToMixer();
+  // بداية ناعمة للموسيقى - Fade In حتى لا تقطع فجأة
+  if(musicGain){
+    musicGain.gain.setValueAtTime(0.01, actx.currentTime);
+    musicGain.gain.linearRampToValueAtTime(parseFloat($('musicVol').value)/100, actx.currentTime+1.5);
+  }
+  await musicAudio.play();
+  $('musicStatus').textContent='🎵 الموسيقى تشتغل الآن - ستندمج معك في التسجيل';
+});
+$('btnMusicStop').addEventListener('click',()=>{
+  if(!musicAudio) return;
+  musicAudio.pause();
+  $('musicStatus').textContent='⏸ الموسيقى متوقفة';
+});
+
 $('micVol').addEventListener('input',e=>{
   boost=parseFloat(e.target.value); $('volVal').textContent=boost.toFixed(1)+'×';
   if(gainNode) gainNode.gain.value=boost;
 });
+$('musicVol').addEventListener('input',e=>{
+  $('musicVolVal').textContent=e.target.value+'%';
+  if(musicGain && !$('optDucking').checked) musicGain.gain.value=parseFloat(e.target.value)/100;
+});
 
-/* ---------- الكاميرا - النسخة المعدلة ---------- */
+/* ---------- الكاميرا ---------- */
 async function startCam(f){
   try{
     if(camStream)camStream.getTracks().forEach(t=>t.stop());
@@ -308,7 +292,7 @@ async function startCam(f){
     setupAudio();
     camReady=true; facing=f;
     camEl.className=f==='user'?'':'back';
-    setStatus('ok','✅ الكاميرا جاهزة - اضغط بدء التسجيل');
+    setStatus('ok','✅ الكاميرا جاهزة - اختر الموسيقى ثم اضغط بدء التسجيل');
   }catch(err){
     setStatus('err','⚠️ لم يسمح بالكاميرا: '+err.message+'<br>افتح في Chrome واسمح بالكاميرا والميكروفون');
     camReady=false;
@@ -318,13 +302,14 @@ $('btnCamOn').addEventListener('click',()=>startCam(facing));
 $('btnSwitch').addEventListener('click',()=>{ if(!camReady)return; if(isRecording){setStatus('err','⚠️ لا تبدل أثناء التسجيل');return;} startCam(facing==='user'?'environment':'user'); });
 $('camZoom').addEventListener('input',e=>{camZoom=parseFloat(e.target.value);$('zoomVal').textContent=camZoom.toFixed(1)+'×';});
 
-/* ---------- التسجيل ---------- */
+/* ---------- التسجيل المباشر + الموسيقى ---------- */
 function startTimer(){ startTime=Date.now(); pausedTotal=0; timerEl.classList.add('show'); timerInt=setInterval(()=>{ if(isPaused)return; const s=Math.floor((Date.now()-startTime-pausedTotal)/1000); timerEl.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); },500); }
 function stopTimer(){ clearInterval(timerInt); timerEl.classList.remove('show'); }
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 function stopRecording(){
   if(!isRecording)return;
   setStatus('busy','⏳ جاري تجهيز الفيديو... انتظر قليلاً');
+  if(musicAudio) musicAudio.pause();
   try{ if(recorder&&recorder.state!=='inactive')recorder.stop(); }catch(e){}
 }
 $('btnStart').addEventListener('click',async()=>{
@@ -336,6 +321,13 @@ $('btnStart').addEventListener('click',async()=>{
       $('count').classList.add('show');
       for(cdVal=3;cdVal>0;cdVal--){$('count').textContent=cdVal;await sleep(800);}
       cdVal=0;$('count').classList.remove('show');
+    }
+    // إذا اخترت موسيقى، شغلها طوالي مع بداية التسجيل
+    if(musicAudio){
+      connectMusicToMixer();
+      if(musicGain){ musicGain.gain.setValueAtTime(0.01, actx.currentTime); musicGain.gain.linearRampToValueAtTime(parseFloat($('musicVol').value)/100, actx.currentTime+1.5); }
+      musicAudio.currentTime=0;
+      await musicAudio.play().catch(()=>{});
     }
     draw();
     stream=cv.captureStream(25);
@@ -349,33 +341,27 @@ $('btnStart').addEventListener('click',async()=>{
     chunks=[]; recorder.ondataavailable=e=>{ if(e.data&&e.data.size>0)chunks.push(e.data); };
     recorder.onstop=async()=>{
       stopTimer(); isRecording=false; isPaused=false;
+      if(musicAudio) musicAudio.pause();
       if(!chunks.length){ setStatus('err','⚠️ لم يتم التسجيل - حاول في Chrome'); $('btnStart').style.display='block'; $('btnStop').style.display='none'; $('btnPause').style.display='none'; return; }
-
       let blob=new Blob(chunks,{type:mime||'video/webm'});
       let finalMime=mime||'video/webm';
-
       if(finalMime.includes('webm')||!finalMime.includes('mp4')){
-        try{
-          blob=await convertToMp4(blob);
-          finalMime='video/mp4';
-        }catch(convErr){
+        try{ blob=await convertToMp4(blob); finalMime='video/mp4'; }catch(convErr){
           setStatus('err','⚠️ '+convErr.message+' - تم توفير الملف الأصلي (WebM) للتحميل، لكنه قد لا يعمل على واتساب.');
           window._lastBlob=blob; window._lastMime=finalMime;
-          $('btnDownload').style.display='block'; $('btnStart').style.display='block'; $('btnStop').style.display='none'; $('btnPause').style.display='none';
-          return;
+          $('btnDownload').style.display='block'; $('btnStart').style.display='block'; $('btnStop').style.display='none'; $('btnPause').style.display='none'; return;
         }
       }
-
       window._lastBlob=blob; window._lastMime=finalMime;
       const sizeMB=(blob.size/1048576).toFixed(1);
-      setStatus('ok',`✅ تم التصوير كاملاً - ${sizeMB} MB - صيغة ${finalMime.includes('mp4')?'MP4 (متوافقة مع واتساب)':'أخرى'} - اضغط تحميل`);
+      setStatus('ok',`✅ تم التصوير كاملاً - ${sizeMB} MB - صوتك + الموسيقى مدموجين - اضغط تحميل`);
       $('btnDownload').style.display='block'; $('btnStart').style.display='block'; $('btnStop').style.display='none'; $('btnPause').style.display='none';
     };
     recorder.start(500);
     isRecording=true; isPaused=false; startTimer();
     try{ if(navigator.wakeLock)navigator.wakeLock.request('screen').catch(()=>{}); }catch(e){}
     $('btnStart').style.display='none'; $('btnStop').style.display='block'; $('btnPause').style.display='block'; $('btnDownload').style.display='none';
-    setStatus('busy','🔴 يصور الآن مباشرة... اضغط إيقاف عند الانتهاء');
+    setStatus('busy','🔴 يصور الآن مباشرة + الموسيقى تندمج معك... اضغط إيقاف عند الانتهاء');
   }catch(err){ setStatus('err','⚠️ فشل التسجيل: '+err.message); }
 });
 $('btnPause').addEventListener('click',()=>{
@@ -383,11 +369,13 @@ $('btnPause').addEventListener('click',()=>{
   if(!isPaused){
     isPaused=true; pauseStart=Date.now();
     try{recorder.pause();}catch(e){}
+    if(musicAudio) musicAudio.pause();
     $('btnPause').textContent='▶️ استئناف';
     setStatus('busy','⏸️ إيقاف مؤقت - اضغط استئناف');
   }else{
     isPaused=false; pausedTotal+=Date.now()-pauseStart;
     try{recorder.resume();}catch(e){}
+    if(musicAudio) musicAudio.play().catch(()=>{});
     $('btnPause').textContent='⏸️ إيقاف مؤقت';
     setStatus('busy','🔴 يصور الآن...');
   }
@@ -395,9 +383,8 @@ $('btnPause').addEventListener('click',()=>{
 $('btnStop').addEventListener('click',stopRecording);
 $('btnDownload').addEventListener('click',()=>{
   const blob=window._lastBlob; if(!blob)return;
-  let ext='webm';
-  if((window._lastMime||'').includes('mp4')) ext='mp4';
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='aje_live_'+Date.now()+'.'+ext; a.click();
+  let ext='webm'; if((window._lastMime||'').includes('mp4')) ext='mp4';
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='aje_live_music_'+Date.now()+'.'+ext; a.click();
   setStatus('ok','✅ تم التحميل');
 });
 window.addEventListener('beforeunload',e=>{ if(isRecording){e.preventDefault();e.returnValue='التصوير جارٍ';} });
