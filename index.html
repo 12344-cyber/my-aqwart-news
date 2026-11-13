@@ -1,65 +1,268 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <title>مطور نصوص يونيتي الاحترافي V2</title>
-    <link rel="preconnect" href="https://googleapis.com">
-    <link rel="preconnect" href="https://gstatic.com" crossorigin>
-    <link href="https://googleapis.com/css2?family=Cairo:wght@900&family=Lalezar&display=swap" rel="stylesheet">
-    <style>
-        body{background:#0b0f19;color:#f8fafc;font-family:'Cairo','Arial Black',sans-serif;text-align:center;padding:20px}
-        .container{max-width:1000px;margin:auto;background:#151f32;padding:25px;border-radius:20px;box-shadow:0 20px 40px rgba(0,0,0,0.5);display:grid;grid-template-columns:1.2fr 1fr;gap:20px}
-        .controls{display:flex;flex-direction:column;gap:12px;background:rgba(0,0,0,0.2);padding:15px;border-radius:12px}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-        .form-group{display:flex;flex-direction:column;gap:5px;text-align:right}
-        input,select{padding:10px;border-radius:6px;border:1px solid #334155;background:#0b0f19;color:white;font-family:inherit}
-        .color-group{display:flex;align-items:center;gap:8px;background:#0b0f19;padding:4px 8px;border-radius:6px;border:1px solid #334155}
-        input[type="color"]{border:none;width:30px;height:30px;cursor:pointer;background:none}
-        .preview-area{background-image:linear-gradient(45deg,#1e293b 25%,transparent 25%),linear-gradient(-45deg,#1e293b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1e293b 75%),linear-gradient(-45deg,transparent 75%,#1e293b 75%);background-size:20px 20px;border-radius:12px;border:2px dashed #334155;min-height:280px;display:flex;align-items:center;justify-content:center;overflow:auto;box-sizing:border-box}
-        canvas{max-width:100%;height:auto}
-        .btn-download{background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:white;border:none;padding:14px;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(34,197,94,0.3);width:100%}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ovira Creative Studio | Advertising, Logo Design & Websites</title>
+<meta name="description" content="Ovira Creative Studio — إعلانات المنتجات، تصميم الشعارات والمواقع بأسلوب احترافي.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap');
+:root{
+ --white:#fff;--black:#080808;--black2:#111;--gold:#c99b4b;--gold2:#e6c47a;
+ --gray:#666;--line:#e9e9e9;--soft:#f6f6f4;--shadow:0 20px 60px rgba(0,0,0,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:Cairo,Arial,sans-serif;background:var(--white);color:var(--black);line-height:1.8;overflow-x:hidden}
+a{text-decoration:none;color:inherit}button,input,textarea,select{font:inherit}
+.container{width:min(1180px,92%);margin:auto}
+header{position:fixed;top:0;left:0;right:0;z-index:99;background:rgba(255,255,255,.9);backdrop-filter:blur(18px);border-bottom:1px solid #eee}
+.nav{height:76px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.8px}
+.logo-mark{width:40px;height:40px;border-radius:50%;border:2px solid var(--gold);display:grid;place-items:center;font-size:20px;color:var(--gold)}
+.logo small{display:block;font-size:7px;letter-spacing:3px;color:#777;line-height:1}
+.navlinks{display:flex;gap:28px;font-size:13px;color:#333}
+.navlinks a{transition:.25s}.navlinks a:hover{color:var(--gold)}
+.nav-actions{display:flex;gap:8px;align-items:center}
+.lang,.menu{border:1px solid #ddd;background:#fff;border-radius:50px;padding:8px 13px;cursor:pointer}
+.menu{display:none}
+.btn{border:0;border-radius:50px;padding:13px 23px;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:800;cursor:pointer;transition:.3s}
+.btn.gold{background:linear-gradient(110deg,var(--gold),var(--gold2));color:#111;box-shadow:0 12px 28px rgba(201,155,75,.25)}
+.btn.black{background:#080808;color:#fff}
+.btn.light{border:1px solid #ddd;background:#fff}
+.btn:hover{transform:translateY(-3px)}
+.hero{min-height:100vh;display:grid;place-items:center;text-align:center;padding-top:90px;position:relative;overflow:hidden;background:linear-gradient(#fff,#faf9f5)}
+.hero:before{content:"";position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(201,155,75,.15),transparent 65%);top:-220px;right:-120px}
+.hero:after{content:"";position:absolute;width:450px;height:450px;border-radius:50%;background:radial-gradient(circle,rgba(0,0,0,.06),transparent 68%);bottom:-180px;left:-100px}
+.hero-inner{position:relative;z-index:1;max-width:900px}
+.badge{display:inline-block;border:1px solid #ddd;border-radius:50px;padding:6px 14px;font-size:10px;letter-spacing:2px;color:#777;margin-bottom:24px;background:#fff}
+.hero h1{font-size:clamp(50px,9vw,110px);line-height:.98;letter-spacing:-5px;font-weight:900}
+.hero h1 span{display:block;color:var(--gold)}
+.hero p{max-width:760px;margin:25px auto;color:#666;font-size:16px}
+.hero-buttons{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.hero-brand{margin-top:70px;font-size:12px;letter-spacing:7px;color:#aaa}
+section{padding:105px 0}
+.section-head{margin-bottom:42px}
+.kicker{font-size:10px;letter-spacing:3px;color:var(--gold);font-weight:800}
+.section-head h2{font-size:clamp(36px,5vw,60px);line-height:1.15;margin:8px 0}
+.section-head p{color:#777;max-width:600px}
+.services{background:var(--soft)}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:30px;min-height:410px;position:relative;overflow:hidden;transition:.4s;box-shadow:0 7px 25px rgba(0,0,0,.03)}
+.card:hover{transform:translateY(-8px);box-shadow:var(--shadow);border-color:#d7bc87}
+.card-number{position:absolute;top:18px;left:22px;color:#ddd;font-size:34px;font-weight:900}
+.icon{width:60px;height:60px;border-radius:18px;background:#faf7f0;border:1px solid #eee0c7;display:grid;place-items:center;color:var(--gold);font-size:25px;margin-bottom:60px}
+.card .tag{font-size:10px;letter-spacing:2px;color:#999}
+.card h3{font-size:25px;margin:7px 0}
+.card p{font-size:13px;color:#777;min-height:75px}
+.price{margin:18px 0 8px;font-size:24px;font-weight:900}.price small{font-size:11px;color:#777;font-weight:500}
+.card ul{list-style:none;color:#777;font-size:11px;margin:12px 0 22px}.card li:before{content:"✓";color:var(--gold);font-weight:900;margin-left:7px}
+.price-toggle{display:flex;align-items:center;gap:8px;border:1px solid #ddd;border-radius:50px;padding:5px;background:#fff;width:max-content}
+.price-toggle button{border:0;background:transparent;padding:6px 12px;border-radius:50px;cursor:pointer;font-size:11px}
+.price-toggle button.active{background:#080808;color:#fff}
+.currency-bar{display:flex;justify-content:flex-end;margin-bottom:20px;align-items:center;gap:10px;font-size:11px;color:#777}
+.why{background:#080808;color:#fff}.why .kicker{color:var(--gold2)}.why .section-head p{color:#999}
+.why-grid{display:grid;grid-template-columns:1fr 1.4fr;gap:60px;align-items:center}
+.big{font-size:clamp(40px,5vw,65px);font-weight:900;line-height:1.1}.big span{color:var(--gold2)}
+.advantages{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.adv{border:1px solid #292929;border-radius:20px;padding:25px;background:#101010}.adv b{color:var(--gold2)}.adv h3{margin:7px 0}.adv p{font-size:12px;color:#999}
+.process{background:#fff}.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.step{border-top:2px solid #111;padding:22px 5px}.step strong{font-size:11px;color:var(--gold)}.step h3{margin:10px 0}.step p{font-size:12px;color:#777}
+.portfolio{background:var(--soft)}.projects{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}.project{height:310px;border-radius:24px;border:1px solid #ddd;padding:25px;display:flex;flex-direction:column;justify-content:end;position:relative;overflow:hidden;background:#111;color:#fff}.project:nth-child(2){background:#15110a}.project:nth-child(3){grid-column:1/3;height:250px;background:#0d0d0d}.project:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 70% 30%,rgba(201,155,75,.55),transparent 35%),linear-gradient(145deg,transparent,#000)}
+.project>*{position:relative;z-index:1}.demo{position:absolute!important;top:20px;right:20px;font-size:9px;letter-spacing:2px;color:#ccc;border:1px solid #555;border-radius:50px;padding:5px 9px}.project h3{font-size:27px}.project p{font-size:11px;color:#bbb}
+.ad-show{background:#fff}.showbox{border-radius:30px;background:#080808;color:#fff;padding:60px;display:grid;grid-template-columns:1.2fr .8fr;gap:40px;align-items:center;overflow:hidden}.showbox h2{font-size:clamp(40px,6vw,70px);line-height:1.05}.showbox h2 span{color:var(--gold2)}.showbox p{color:#aaa;margin:16px 0}.phone{width:220px;height:420px;border:7px solid #292929;border-radius:35px;margin:auto;background:linear-gradient(145deg,#252018,#050505 50%,#c39446);position:relative;box-shadow:0 0 80px rgba(201,155,75,.25)}.phone:after{content:"10 SEC — 60 SEC";position:absolute;bottom:24px;left:0;right:0;text-align:center;font-size:9px;color:#fff;letter-spacing:1px}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:center}.about-grid p{color:#666;line-height:2.1}.pill{display:inline-block;margin-top:25px;border:1px solid #ddd;border-radius:50px;padding:10px 16px;font-size:11px;letter-spacing:2px}
+.instagram{background:var(--soft)}.insta-box{text-align:center;background:#fff;border:1px solid #e5e5e5;border-radius:28px;padding:55px}.insta-box h2{font-size:clamp(38px,5vw,60px)}.handle{display:block;font-size:22px;color:#111;font-weight:900;margin:8px 0 24px}.insta-link{word-break:break-all;color:#a57a32;font-size:11px;margin-bottom:22px;display:block}
+.contact{background:#080808;color:#fff}.contact-grid{display:grid;grid-template-columns:.8fr 1.2fr;gap:60px}.contact h2{font-size:clamp(42px,5vw,65px);line-height:1.1}.contact p{color:#999;margin-top:18px}
+form{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/3}.field label{font-size:10px;color:#aaa}.field input,.field textarea,.field select{background:#111;color:#fff;border:1px solid #2b2b2b;border-radius:13px;padding:13px;outline:0}.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--gold)}textarea{min-height:140px;resize:vertical}form .btn{grid-column:1/3}
+.payment{margin-top:24px;border:1px solid #292929;border-radius:18px;padding:18px}.payment-title{font-size:11px;color:#aaa;margin-bottom:10px}.methods{display:flex;flex-wrap:wrap;gap:7px}.method{background:#fff;color:#111;border-radius:8px;padding:5px 10px;font-size:10px;font-weight:800}.payment-note{font-size:9px;color:#777;margin-top:9px}
+footer{background:#050505;color:#888;border-top:1px solid #222;padding:35px 0}.foot{display:flex;justify-content:space-between;gap:25px;align-items:center}.footlinks{display:flex;gap:17px;font-size:11px}.footlinks a:hover{color:#fff}
+.mobile{display:none;position:fixed;top:76px;left:0;right:0;background:#fff;border-bottom:1px solid #eee;padding:18px;z-index:98}.mobile a{display:block;padding:10px}
+.reveal{opacity:0;transform:translateY(25px);transition:.7s}.reveal.show{opacity:1;transform:none}
+.toast{position:fixed;bottom:25px;left:50%;transform:translate(-50%,20px);background:#111;color:#fff;border:1px solid #333;padding:13px 20px;border-radius:50px;opacity:0;pointer-events:none;transition:.3s;z-index:200;font-size:11px}.toast.show{opacity:1;transform:translate(-50%,0)}
+
+.portfolio-filters{display:flex;gap:8px;flex-wrap:wrap;margin:-18px 0 25px}
+.filter{border:1px solid #ddd;background:#fff;color:#555;border-radius:50px;padding:8px 16px;font-size:11px;cursor:pointer;transition:.25s}
+.filter:hover,.filter.active{background:#080808;color:#fff;border-color:#080808}
+.projects{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.project{height:auto;min-height:455px!important;border-radius:24px;border:1px solid #ddd;padding:0;display:flex;flex-direction:column;justify-content:flex-start;position:relative;overflow:hidden;background:#111;color:#fff;transition:.45s}
+.project:hover{transform:translateY(-7px);box-shadow:0 25px 60px rgba(0,0,0,.16);border-color:#d3b47b}
+.project.hidden{display:none}
+.project-art{height:305px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.project-art:before{content:"";position:absolute;inset:-30%;background:radial-gradient(circle at 70% 30%,rgba(255,255,255,.16),transparent 28%);transform:rotate(12deg)}
+.project-art span{font-size:64px;font-weight:900;letter-spacing:5px;position:relative;z-index:2}
+.project-art i{position:absolute;z-index:2;font-style:normal;font-size:9px;letter-spacing:4px;line-height:1.7;opacity:.7}
+.ad-art{background:radial-gradient(circle at 70% 30%,#c9a052 0,#4e3a1b 20%,#111 55%,#050505 100%)}
+.ad-art span{color:#fff;text-shadow:0 12px 40px #000}
+.ad-art i{bottom:28px;left:30px;color:#fff}
+.brand-art{background:linear-gradient(135deg,#f8f3e8,#c7a76a 55%,#18140d)}
+.brand-art span{color:#0b0b0b;font-family:Georgia,serif}
+.brand-art i{bottom:28px;right:30px;color:#17130c;text-align:right}
+.web-art{background:linear-gradient(135deg,#dedbd3,#8c826f 45%,#171717)}
+.luma-art{background:linear-gradient(135deg,#f3f3f3,#b4b0a7 48%,#202020)}
+.browser{width:72%;height:72%;border-radius:13px;background:#fff;color:#111;box-shadow:0 25px 50px #0005;padding:22px;position:relative}
+.browser b{font-size:25px;letter-spacing:2px}.browser small{display:block;color:#777;font-size:7px;letter-spacing:2px}
+.browser em{display:block;height:8px;background:#e6e3dd;border-radius:8px;margin-top:15px;width:85%}.browser em:nth-of-type(2){width:55%}.browser em:nth-of-type(3){width:70%;height:50px;margin-top:25px;background:#161616}
+.social-art{background:radial-gradient(circle at 30% 30%,#fff 0,#6d6d6d 12%,#171717 42%,#050505 100%)}
+.social-art span{font-size:58px}.social-art i{bottom:28px;right:30px;text-align:right}
+.zeno-art{background:linear-gradient(145deg,#171717,#050505)}
+.zeno-art span{width:110px;height:110px;border:2px solid #d1aa5e;border-radius:50%;display:grid;place-items:center;color:#d1aa5e;font-family:Georgia,serif}
+.zeno-art i{bottom:28px;left:30px;color:#d1aa5e}
+.project-info{background:#fff;color:#111;padding:22px 25px 25px;flex:1}
+.project-info h3{font-size:21px;margin-bottom:4px}.project-info p{font-size:11px;color:#777}
+.project .demo{top:18px;right:18px;z-index:4;background:rgba(0,0,0,.35);backdrop-filter:blur(8px);border-color:#ffffff44}
+@media(max-width:560px){.projects{grid-template-columns:1fr}.project-art{height:260px}.project{min-height:410px!important}}
+
+@media(max-width:900px){.navlinks{display:none}.menu{display:block}.cards,.why-grid,.about-grid,.contact-grid,.showbox{grid-template-columns:1fr}.steps{grid-template-columns:1fr 1fr}.projects{grid-template-columns:1fr}.project,.project:nth-child(3){grid-column:auto}.showbox{padding:35px}.advantages{margin-top:20px}}
+@media(max-width:560px){.nav{height:70px}.nav-actions .btn{display:none}.hero h1{letter-spacing:-3px}.hero p{font-size:14px}.hero-buttons .btn{width:100%}.currency-bar{justify-content:flex-start}.steps{grid-template-columns:1fr}.advantages{grid-template-columns:1fr}.insta-box{padding:35px 20px}form{grid-template-columns:1fr}.field.full,form .btn{grid-column:auto}.foot{flex-direction:column;text-align:center}.footlinks{flex-wrap:wrap;justify-content:center}.phone{width:190px;height:370px}}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="controls">
-            <div class="form-group"><label>النص:</label><input type="text" id="textInput" value="مستوى جديد"></div>
-            <div class="form-row">
-                <div class="form-group"><label>الخط:</label><select id="fontSelect"><option value="Cairo">القاهرة</option><option value="Lalezar">بازار</option></select></div>
-                <div class="form-group"><label>الحجم:</label><input type="number" id="fontSize" value="90"></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label>لون الكلمة الأساسي:</label><div class="color-group"><input type="color" id="textColor" value="#ffffff"><span id="textColorHex">#ffffff</span></div></div>
-                <div class="form-group"><label>لون الحواف (Stroke):</label><div class="color-group"><input type="color" id="strokeColor" value="#0f172a"><span id="strokeColorHex">#0f172a</span></div></div>
-            </div>
-            <div class="form-group"><label>سُمك الحواف:</label><input type="number" id="strokeWidth" value="8"></div>
-            <button class="btn-download" id="downloadBtn">تحميل الصورة PNG الشفافة</button>
-        </div>
-        <div class="preview-area"><canvas id="textCanvas"></canvas></div>
-    </div>
-    <script>
-        const canvas=document.getElementById('textCanvas'),ctx=canvas.getContext('2d');
-        const textInput=document.getElementById('textInput'),fontSelect=document.getElementById('fontSelect'),fontSizeInput=document.getElementById('fontSize'),textColor=document.getElementById('textColor'),strokeColor=document.getElementById('strokeColor'),strokeWidthInput=document.getElementById('strokeWidth'),textColorHex=document.getElementById('textColorHex'),strokeColorHex=document.getElementById('strokeColorHex'),downloadBtn=document.getElementById('downloadBtn');
-        
-        function updateCanvas(){
-            const t=textInput.value||" ",f=fontSelect.value,s=parseInt(fontSizeInput.value)||50,w=parseInt(strokeWidthInput.value)||0;
-            textColorHex.innerText=textColor.value;strokeColorHex.innerText=strokeColor.value;
-            ctx.font=`900 ${s}px '${f}','Arial Black',sans-serif`;
-            const m=ctx.measureText(t),extra=(w*2)+60;
-            canvas.width=Math.ceil(m.width)+extra;canvas.height=s*1.6+extra;
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            ctx.font=`900 ${s}px '${f}','Arial Black',sans-serif`;ctx.textBaseline='middle';ctx.textAlign='center';
-            const x=canvas.width/2,y=canvas.height/2;
-            if(w>0){ctx.strokeStyle=strokeColor.value;ctx.lineWidth=w;ctx.lineJoin='round';ctx.strokeText(t,x,y)}
-            ctx.fillStyle=textColor.value;ctx.fillText(t,x,y);
-        }
-        [textInput,fontSelect,fontSizeInput,textColor,strokeColor,strokeWidthInput].forEach(i=>{i.addEventListener('input',updateCanvas);i.addEventListener('change',updateCanvas)});
-        window.onload=function(){updateCanvas();setTimeout(updateCanvas,100)};
-        updateCanvas();
-        downloadBtn.addEventListener('click',()=>{
-            const t=textInput.value.trim()||'unity-text',l=document.createElement('a');
-            l.download=`${t}.png`;l.href=canvas.toDataURL('image/png');l.click();
-        });
-    </script>
+<header><div class="container nav">
+<a class="logo" href="#home"><span class="logo-mark">V</span><span>OVIRA<small>CREATIVE STUDIO</small></span></a>
+<nav class="navlinks"><a href="#home" data-ar="الرئيسية" data-en="Home">الرئيسية</a><a href="#services" data-ar="الخدمات" data-en="Services">الخدمات</a><a href="#work" data-ar="أعمالنا" data-en="Portfolio">أعمالنا</a><a href="#about" data-ar="عنا" data-en="About">عنا</a><a href="#contact" data-ar="تواصل معنا" data-en="Contact">تواصل معنا</a></nav>
+<div class="nav-actions"><button class="lang" id="lang">EN</button><a class="btn gold" href="#contact" data-ar="تواصل معنا" data-en="Contact us">تواصل معنا</a><button class="menu" id="menu">☰</button></div>
+</div><div class="mobile" id="mobile"></div></header>
+
+<main>
+<section class="hero" id="home"><div class="hero-inner reveal">
+<div class="badge" data-ar="استوديو إبداعي رقمي" data-en="CREATIVE DIGITAL STUDIO">استوديو إبداعي رقمي</div>
+<h1 data-ar="نحن نُبدع.<span>أنتم تنمون.</span>" data-en="WE CREATE.<span>YOU GROW.</span>">نحن نُبدع.<span>أنتم تنمون.</span></h1>
+<p data-ar="Ovira Creative Studio — إعلانات إبداعية، هوية بصرية لا تُنسى، ومواقع عصرية مصممة لتجعل علامتك التجارية مميزة." data-en="Ovira Creative Studio — Creative advertising, unforgettable branding, and modern websites designed to make your brand stand out.">Ovira Creative Studio — إعلانات إبداعية، هوية بصرية لا تُنسى، ومواقع عصرية مصممة لتجعل علامتك التجارية مميزة.</p>
+<div class="hero-buttons"><a class="btn gold" href="#contact" data-ar="ابدأ مشروعك" data-en="START A PROJECT">ابدأ مشروعك</a><a class="btn light" href="#services" data-ar="استكشف الخدمات" data-en="EXPLORE SERVICES">استكشف الخدمات</a></div>
+<div class="hero-brand">OVIRA CREATIVE STUDIO</div>
+</div></section>
+
+<section class="services" id="services"><div class="container">
+<div class="section-head reveal"><div class="kicker">01 / SERVICES</div><h2 data-ar="خدماتنا وأسعارنا" data-en="SERVICES & PRICING">خدماتنا وأسعارنا</h2><p data-ar="أسعار واضحة بالدينار الجزائري مع إمكانية عرضها بالدولار الأمريكي." data-en="Clear prices in Algerian Dinar with an option to view them in US Dollars.">أسعار واضحة بالدينار الجزائري مع إمكانية عرضها بالدولار الأمريكي.</p></div>
+<div class="currency-bar"><span data-ar="العملة:" data-en="Currency:">العملة:</span><div class="price-toggle"><button id="dzd" class="active">DZD دج</button><button id="usd">USD $</button></div></div>
+<div class="cards">
+<article class="card reveal"><span class="card-number">01</span><div class="icon">◈</div><div class="tag">10–60 SEC</div><h3 data-ar="إعلانات المنتجات" data-en="Product Advertising">إعلانات المنتجات</h3><p data-ar="فيديوهات إعلانية احترافية للمنتجات، جاهزة لـ TikTok وReels وShorts والإعلانات الممولة." data-en="Professional product ads for TikTok, Reels, Shorts and paid social campaigns.">فيديوهات إعلانية احترافية للمنتجات، جاهزة لـ TikTok وReels وShorts والإعلانات الممولة.</p><div class="price" data-dzd="1,000 – 5,000" data-usd="≈ $7 – $36">1,000 – 5,000 <small>دج</small></div><ul><li>10–60 ثانية</li><li>Social Media Ready</li><li>صيغة عمودية 9:16</li></ul><a class="btn black" href="#contact" data-ar="اطلب إعلانًا" data-en="REQUEST AN AD">اطلب إعلانًا</a></article>
+<article class="card reveal"><span class="card-number">02</span><div class="icon">✦</div><div class="tag">BRANDING</div><h3 data-ar="تصميم الشعارات" data-en="Logo Design">تصميم الشعارات</h3><p data-ar="شعار احترافي وهوية بصرية تساعد علامتك على الظهور بثقة على المنصات الرقمية." data-en="Professional logo and visual identity work built for confident digital presence.">شعار احترافي وهوية بصرية تساعد علامتك على الظهور بثقة على المنصات الرقمية.</p><div class="price" data-dzd="500 – 1,000" data-usd="≈ $4 – $7">500 – 1,000 <small>دج</small></div><ul><li>أفكار مخصصة</li><li>Typography حديثة</li><li>ملفات عالية الدقة</li></ul><a class="btn black" href="#contact" data-ar="صمّم شعاري" data-en="CREATE MY LOGO">صمّم شعاري</a></article>
+<article class="card reveal"><span class="card-number">03</span><div class="icon">⌘</div><div class="tag">WEB DESIGN</div><h3 data-ar="إنشاء المواقع" data-en="Website Creation">إنشاء المواقع</h3><p data-ar="مواقع احترافية متجاوبة للشركات والعلامات وصناع المحتوى، مع UI/UX وحركات سلسة." data-en="Professional responsive websites for businesses, brands and creators with modern UI/UX and smooth motion.">مواقع احترافية متجاوبة للشركات والعلامات وصناع المحتوى، مع UI/UX وحركات سلسة.</p><div class="price" data-dzd="10,000 – 20,000" data-usd="≈ $72 – $144">10,000 – 20,000 <small>دج</small></div><ul><li>Mobile Optimization</li><li>Landing / Business / Portfolio</li><li>Animations سلسة</li></ul><a class="btn black" href="#contact" data-ar="ابنِ موقعي" data-en="BUILD MY WEBSITE">ابنِ موقعي</a></article>
+</div></div></section>
+
+<section class="why"><div class="container why-grid"><div class="reveal"><div class="kicker">02 / WHY OVIRA</div><div class="big" data-ar="الإبداع ليس مجرد شكل.<br><span>إنه تأثير.</span>" data-en="Creativity isn't just how it looks.<br><span>It's impact.</span>">الإبداع ليس مجرد شكل.<br><span>إنه تأثير.</span></div></div><div class="advantages">
+<div class="adv reveal"><b>01</b><h3 data-ar="إبداع" data-en="Creative">إبداع</h3><p data-ar="أفكار أصلية مصممة خصيصًا لعلامتك." data-en="Original concepts created specifically for your brand.">أفكار أصلية مصممة خصيصًا لعلامتك.</p></div>
+<div class="adv reveal"><b>02</b><h3 data-ar="جودة Premium" data-en="Premium">جودة Premium</h3><p data-ar="اهتمام بكل تفصيلة وجودة بصرية احترافية." data-en="Professional visual quality with attention to every detail.">اهتمام بكل تفصيلة وجودة بصرية احترافية.</p></div>
+<div class="adv reveal"><b>03</b><h3 data-ar="حديث" data-en="Modern">حديث</h3><p data-ar="تصاميم وتجارب رقمية معاصرة." data-en="Contemporary designs and digital experiences.">تصاميم وتجارب رقمية معاصرة.</p></div>
+<div class="adv reveal"><b>04</b><h3 data-ar="نتائج" data-en="Results">نتائج</h3><p data-ar="عمل إبداعي مبني حول جمهورك وأهداف مشروعك." data-en="Creative work built around your audience and goals.">عمل إبداعي مبني حول جمهورك وأهداف مشروعك.</p></div>
+</div></div></section>
+
+<section class="process"><div class="container"><div class="section-head reveal"><div class="kicker">03 / PROCESS</div><h2 data-ar="طريقة العمل" data-en="OUR PROCESS">طريقة العمل</h2></div><div class="steps">
+<div class="step reveal"><strong>01 — DISCOVER</strong><h3 data-ar="اكتشف" data-en="Discover">اكتشف</h3><p data-ar="نفهم علامتك ومنتجك وأهدافك." data-en="Understand your brand, product and goals.">نفهم علامتك ومنتجك وأهدافك.</p></div>
+<div class="step reveal"><strong>02 — PLAN</strong><h3 data-ar="خطط" data-en="Plan">خطط</h3><p data-ar="نحدد الاتجاه الإبداعي واستراتيجية المشروع." data-en="Set the creative direction and project strategy.">نحدد الاتجاه الإبداعي واستراتيجية المشروع.</p></div>
+<div class="step reveal"><strong>03 — CREATE</strong><h3 data-ar="أنشئ" data-en="Create">أنشئ</h3><p data-ar="نحوّل الفكرة إلى منتج احترافي." data-en="Turn the concept into polished work.">نحوّل الفكرة إلى منتج احترافي.</p></div>
+<div class="step reveal"><strong>04 — DELIVER</strong><h3 data-ar="سلّم" data-en="Deliver">سلّم</h3><p data-ar="تستلم العمل جاهزًا للاستخدام." data-en="Receive the finished work ready to use.">تستلم العمل جاهزًا للاستخدام.</p></div>
+</div></div></section>
+
+<section class="portfolio" id="work"><div class="container">
+<div class="section-head reveal">
+<div class="kicker">04 / PORTFOLIO</div>
+<h2 data-ar="أعمالنا" data-en="OUR WORK">أعمالنا</h2>
+<p data-ar="مجموعة من المشاريع التجريبية التي صممناها لإظهار مستوى الإبداع والأسلوب البصري في OVIRA." data-en="A selection of demo projects created to showcase OVIRA's creative direction and visual quality.">مجموعة من المشاريع التجريبية التي صممناها لإظهار مستوى الإبداع والأسلوب البصري في OVIRA.</p>
+</div>
+<div class="portfolio-filters">
+<button class="filter active" data-filter="all" data-ar="الكل" data-en="ALL">الكل</button>
+<button class="filter" data-filter="ad" data-ar="إعلانات" data-en="ADVERTISING">إعلانات</button>
+<button class="filter" data-filter="brand" data-ar="شعارات وهوية" data-en="BRANDING">شعارات وهوية</button>
+<button class="filter" data-filter="web" data-ar="مواقع" data-en="WEBSITES">مواقع</button>
+</div>
+<div class="projects">
+<article class="project project-ad reveal" data-category="ad">
+<span class="demo">DEMO / ADVERTISING</span><div class="project-art ad-art"><span>NOVA</span><i>PRODUCT<br>CAMPAIGN</i></div>
+<div class="project-info"><h3>NOVA Product Motion</h3><p data-ar="إعلان منتج سينمائي قصير — مفهوم تجريبي." data-en="Cinematic short product advertisement — demo concept.">إعلان منتج سينمائي قصير — مفهوم تجريبي.</p></div>
+</article>
+<article class="project project-brand reveal" data-category="brand">
+<span class="demo">DEMO / BRANDING</span><div class="project-art brand-art"><span>VERA</span><i>VISUAL<br>IDENTITY</i></div>
+<div class="project-info"><h3>VERA Identity</h3><p data-ar="تصميم شعار وهوية بصرية عصرية — مفهوم تجريبي." data-en="Modern logo and visual identity — demo concept.">تصميم شعار وهوية بصرية عصرية — مفهوم تجريبي.</p></div>
+</article>
+<article class="project project-web reveal" data-category="web">
+<span class="demo">DEMO / WEBSITE</span><div class="project-art web-art"><div class="browser"><b>AURA</b><small>CREATIVE / DIGITAL</small><em></em><em></em><em></em></div></div>
+<div class="project-info"><h3>AURA Digital Experience</h3><p data-ar="واجهة موقع احترافية متجاوبة — مفهوم تجريبي." data-en="Premium responsive website interface — demo concept.">واجهة موقع احترافية متجاوبة — مفهوم تجريبي.</p></div>
+</article>
+<article class="project project-ad reveal" data-category="ad">
+<span class="demo">DEMO / SOCIAL</span><div class="project-art social-art"><span>NEXO</span><i>MAKE<br>IT MOVE</i></div>
+<div class="project-info"><h3>NEXO Social Campaign</h3><p data-ar="حملة محتوى قصيرة للسوشيال ميديا — مفهوم تجريبي." data-en="Short-form social media campaign — demo concept.">حملة محتوى قصيرة للسوشيال ميديا — مفهوم تجريبي.</p></div>
+</article>
+<article class="project project-web reveal" data-category="web">
+<span class="demo">DEMO / WEBSITE</span><div class="project-art luma-art"><div class="browser"><b>LUMA</b><small>BUSINESS WEBSITE</small><em></em><em></em><em></em></div></div>
+<div class="project-info"><h3>LUMA Business Website</h3><p data-ar="موقع أعمال أنيق يركز على الوضوح والتحويل — مفهوم تجريبي." data-en="Elegant business website focused on clarity and conversion — demo concept.">موقع أعمال أنيق يركز على الوضوح والتحويل — مفهوم تجريبي.</p></div>
+</article>
+<article class="project project-brand reveal" data-category="brand">
+<span class="demo">DEMO / LOGO</span><div class="project-art zeno-art"><span>Z</span><i>ZENO<br>LOGO CONCEPT</i></div>
+<div class="project-info"><h3>ZENO Logo Concept</h3><p data-ar="مفهوم شعار هندسي فاخر — تجريبي." data-en="Luxury geometric logo concept — demo.">مفهوم شعار هندسي فاخر — تجريبي.</p></div>
+</article>
+</div>
+</div></section>
+
+<section class="ad-show"><div class="container showbox reveal"><div><div class="kicker">05 / ADVERTISING</div><h2 data-ar="اجعل منتجك <span>مستحيلاً تجاهله.</span>" data-en="MAKE YOUR PRODUCT <span>IMPOSSIBLE TO IGNORE.</span>">اجعل منتجك <span>مستحيلاً تجاهله.</span></h2><p data-ar="مبني للانتباه. مصمم للتأثير." data-en="Built for attention. Designed for impact.">مبني للانتباه. مصمم للتأثير.</p><a class="btn gold" href="#contact" data-ar="أنشئ إعلاني" data-en="CREATE MY AD">أنشئ إعلاني</a></div><div class="phone"></div></div></section>
+
+<section id="about"><div class="container about-grid"><div class="reveal"><div class="kicker">06 / ABOUT</div><div class="big">OVIRA<br><span style="color:var(--gold)">CREATIVE STUDIO</span></div></div><div class="reveal"><p data-ar="Ovira Creative Studio هو استوديو إبداعي حديث يساعد العلامات التجارية والشركات وصناع المحتوى على بناء حضور رقمي أقوى من خلال الإعلانات الاحترافية، الهوية البصرية وتصميم المواقع." data-en="Ovira Creative Studio is a modern creative studio helping brands, businesses and creators build a stronger digital presence through professional advertising, branding and web design.">Ovira Creative Studio هو استوديو إبداعي حديث يساعد العلامات التجارية والشركات وصناع المحتوى على بناء حضور رقمي أقوى من خلال الإعلانات الاحترافية، الهوية البصرية وتصميم المواقع.</p><span class="pill">CREATIVITY + DESIGN + TECHNOLOGY</span></div></div></section>
+
+<section class="instagram"><div class="container insta-box reveal"><div class="kicker">07 / INSTAGRAM</div><h2 data-ar="تابع OVIRA" data-en="FOLLOW OVIRA">تابع OVIRA</h2><span class="handle">@oviracreative</span><span class="insta-link">https://oviracreative-209fg00.public.builtwithrocket.new</span><a class="btn black" target="_blank" rel="noopener" href="https://oviracreative-209fg00.public.builtwithrocket.new" data-ar="زيارة الحساب ↗" data-en="VISIT PROFILE ↗">زيارة الحساب ↗</a></div></section>
+
+<section class="contact" id="contact"><div class="container contact-grid">
+<div class="reveal"><div class="kicker">08 / CONTACT</div><h2 data-ar="تواصل معنا" data-en="CONTACT US">تواصل معنا</h2><p data-ar="اكتب ما تحتاجه، وضع اسمك ورقم هاتفك وسنتواصل معك بخصوص مشروعك." data-en="Tell us what you need, add your name and phone number, and we'll contact you about your project.">اكتب ما تحتاجه، وضع اسمك ورقم هاتفك وسنتواصل معك بخصوص مشروعك.</p>
+<div class="payment"><div class="payment-title" data-ar="طرق الدفع المتاحة" data-en="Available payment methods">طرق الدفع المتاحة</div><div class="methods"><span class="method">VISA</span><span class="method">MASTERCARD</span><span class="method">AMEX</span><span class="method">CARD</span><span class="method">GOOGLE PLAY</span></div><div class="payment-note" data-ar="طرق الدفع المعروضة هنا هي خيارات الدفع المقترحة؛ يلزم ربط بوابة دفع فعلية لتلقي المدفوعات." data-en="These are displayed payment options; a real payment gateway must be connected to process payments.">طرق الدفع المعروضة هنا هي خيارات الدفع المقترحة؛ يلزم ربط بوابة دفع فعلية لتلقي المدفوعات.</div></div>
+</div>
+<form id="form" class="reveal">
+<div class="field"><label data-ar="الاسم" data-en="Name">الاسم</label><input required name="name" placeholder="اسمك"></div>
+<div class="field"><label data-ar="رقم الهاتف" data-en="Phone number">رقم الهاتف</label><input required name="phone" placeholder="+213"></div>
+<div class="field full"><label data-ar="ماذا تريد؟" data-en="What do you need?">ماذا تريد؟</label><textarea required name="request" placeholder="اكتب تفاصيل المشروع الذي تريده..."></textarea></div>
+<div class="field"><label data-ar="الخدمة" data-en="Service">الخدمة</label><select name="service"><option data-ar="إعلان منتج" data-en="Product Advertising">إعلان منتج</option><option data-ar="تصميم شعار" data-en="Logo Design">تصميم شعار</option><option data-ar="إنشاء موقع" data-en="Website Creation">إنشاء موقع</option><option data-ar="أخرى" data-en="Other">أخرى</option></select></div>
+<div class="field"><label data-ar="العملة" data-en="Currency">العملة</label><select name="currency"><option>DZD دج</option><option>USD $</option></select></div>
+<button class="btn gold" type="submit" data-ar="إرسال الطلب →" data-en="SEND REQUEST →">إرسال الطلب →</button>
+</form>
+</div></section>
+</main>
+
+<footer><div class="container foot"><div><b style="color:#fff">OVIRA CREATIVE STUDIO</b><div style="font-size:10px">Create. Inspire. Grow.</div></div><div class="footlinks"><a href="#home">Home</a><a href="#services">Services</a><a href="#work">Portfolio</a><a href="#about">About</a><a href="#contact">Contact</a><a target="_blank" rel="noopener" href="https://oviracreative-209fg00.public.builtwithrocket.new">Instagram</a></div><div>© 2026 Ovira Creative Studio. All Rights Reserved.</div></div></footer>
+<div class="mobile" id="mobile"></div><div class="toast" id="toast"></div>
+
+<script>
+let language='ar';
+const body=document.body,lang=document.getElementById('lang'),mobile=document.getElementById('mobile');
+const menuLinks=[['#home','الرئيسية','Home'],['#services','الخدمات','Services'],['#work','أعمالنا','Portfolio'],['#about','عنا','About'],['#contact','تواصل معنا','Contact']];
+function applyLanguage(){
+ document.documentElement.lang=language;document.documentElement.dir=language==='ar'?'rtl':'ltr';
+ document.querySelectorAll('[data-ar]').forEach(e=>e.innerHTML=e.dataset[language]);
+ lang.textContent=language==='ar'?'EN':'عربي';
+ mobile.innerHTML=menuLinks.map(x=>`<a href="${x[0]}">${language==='ar'?x[1]:x[2]}</a>`).join('');
+}
+lang.onclick=()=>{language=language==='ar'?'en':'ar';applyLanguage()};
+document.getElementById('menu').onclick=()=>mobile.style.display=mobile.style.display==='block'?'none':'block';
+mobile.onclick=()=>mobile.style.display='none';
+
+const dzd=document.getElementById('dzd'),usd=document.getElementById('usd');
+function setCurrency(c){
+ document.querySelectorAll('.price').forEach(p=>{
+   p.innerHTML=(c==='dzd'?p.dataset.dzd:p.dataset.usd)+' <small>'+ (c==='dzd'?'دج':'USD')+'</small>';
+ });
+ dzd.classList.toggle('active',c==='dzd');usd.classList.toggle('active',c==='usd');
+}
+dzd.onclick=()=>setCurrency('dzd');usd.onclick=()=>setCurrency('usd');
+
+const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('show')}),{threshold:.12});
+document.querySelectorAll('.reveal').forEach(e=>obs.observe(e));
+document.getElementById('form').addEventListener('submit',e=>{
+ e.preventDefault();const t=document.getElementById('toast');
+ t.textContent=language==='ar'?'تم تجهيز طلبك. اربط النموذج ببوابة بريد/WhatsApp أو Backend لاستقبال الطلبات فعليًا.':'Your request is ready. Connect the form to email/WhatsApp or a backend to receive requests.';
+ t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4500);
+});
+
+document.querySelectorAll('.filter').forEach(btn=>{
+ btn.addEventListener('click',()=>{
+  document.querySelectorAll('.filter').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const f=btn.dataset.filter;
+  document.querySelectorAll('.project').forEach(card=>{
+   card.classList.toggle('hidden',f!=='all' && card.dataset.category!==f);
+  });
+ });
+});
+
+applyLanguage();setCurrency('dzd');
+</script>
 </body>
 </html>
