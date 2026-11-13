@@ -1,308 +1,199 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Aje ajmar - يخدم 100%</title>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;800;900&display=swap" rel="stylesheet">
+<meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
+<meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
+<title>Mihnah Renderer</title>
 <style>
-*{box-sizing:border-box}body{background:#021533;font-family:Cairo,sans-serif;padding:10px;color:#fff;margin:0}
-.box{max-width:800px;margin:auto}
-.card{background:#081a33;padding:14px;border-radius:14px;border:1px solid #164a6b;margin-bottom:10px}
-h2{color:#00e5ff;text-align:center}
-h3{color:#00e5ff;margin:8px 0}
-label{display:block;font-size:14px;margin:10px 0 4px;color:#b8d0e8}
-input[type=file]{width:100%;padding:10px;background:#04122a;border-radius:10px;border:1px solid #00e5ff}
-input[type=text],select{width:100%;padding:11px;border-radius:10px;background:#04122a;color:#fff;border:1px solid #164a6b;font-family:Cairo}
-input[type=range]{width:100%;accent-color:#00e5ff}
-button{width:100%;padding:14px;border:none;border-radius:30px;font-weight:900;font-family:Cairo;font-size:16px;cursor:pointer;margin-top:8px}
-.b1{background:#00e5ff;color:#021533}.b2{background:#9c27b0;color:#fff}.b3{background:#ff4757;color:#fff}.bImg{background:#ff9f43;color:#000}.bMusic{background:#00b894;color:#fff}
-video{width:100%;border-radius:12px;background:#000}
-img.prev{width:100%;border-radius:12px;display:none;margin-top:8px}
-.status{padding:10px;border-radius:10px;background:#04122a;text-align:center;margin-top:10px;font-size:14px}
-.tabs{display:flex;gap:8px}.tabs button{flex:1}
-.tab{display:none}.tab.show{display:block}
-canvas{width:100%;border-radius:12px;background:#000}
+  body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0f172a; color: #f1f5f9; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
+  .box { text-align: center; max-width: 600px; background: #1e293b; padding: 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+  .bar { height: 12px; background: #334155; border-radius: 6px; margin: 20px 0; overflow: hidden; }
+  .fill { height: 100%; background: linear-gradient(90deg, #3fe890, #60f8b0); width: 0%; transition: width 0.4s ease; }
+  h2 { margin-bottom: 10px; font-size: 1.5rem; }
+  p { color: #94a3b8; font-size: 0.95rem; margin: 5px 0; }
+  .error { color: #ef4444; margin-top: 15px; padding: 15px; background: rgba(239,68,68,0.1); border-radius: 8px; display: none; }
 </style>
 </head>
 <body>
 <div class="box">
-<h2>🎬 Aje ajmar - يخدم بدون إنترنت</h2>
-
-<div class="tabs">
-<button class="b1" id="tb1" onclick="showTab(1)">🎥 تصوير مباشر + موسيقى</button>
-<button class="bImg" id="tb2" onclick="showTab(2)">🖼️ صورة + صوت = فيديو</button>
+  <h2 id="status">🔄 جاري تحميل المحرك...</h2>
+  <p id="detail">يرجى الانتظار، قد يستغرق 10-30 ثانية</p>
+  <div class="bar"><div class="fill" id="fill"></div></div>
+  <div id="error" class="error"></div>
 </div>
 
-<!-- TAB 1 : تصوير مباشر -->
-<div id="tab1" class="tab show">
-<div class="card">
-<h3>🎥 تصوير مباشر + موسيقى</h3>
-<video id="realCam" playsinline autoplay muted></video>
-<button class="b1" id="btnCamOn">🎥 تشغيل الكاميرا</button>
-<label>🎵 اختر الموسيقى</label>
-<input type="file" id="musicFile" accept="audio/*">
-<label>🎵 قوة الموسيقى: <span id="musicVolVal">20%</span></label>
-<input type="range" id="musicVol" min="0" max="100" value="20">
-<div style="display:flex;gap:8px"><button class="bMusic" id="btnMusicPlay" style="flex:1">▶ جرب الموسيقى</button><button class="b3" id="btnMusicStop" style="flex:1">⏸ وقف الموسيقى</button></div>
-<p id="musicStatus" style="font-size:12px;color:#00b894">لم تختر موسيقى بعد</p>
-<button class="b2" id="btnStart">● ابدأ التصوير</button>
-<button class="b3" id="btnStop" style="display:none">■ وقف التصوير</button>
-<div class="status" id="status">اضغط تشغيل الكاميرا أولا</div>
-<canvas id="c" width="1080" height="1080" style="display:none"></canvas>
-<video id="finalVideo" controls style="display:none;margin-top:10px"></video>
-<button class="b1" id="btnDownload" style="display:none">⬇️ تحميل الفيديو - اضغط هنا</button>
-</div>
-</div>
-
-<!-- TAB 2 : صورة + صوت -->
-<div id="tab2" class="tab">
-<div class="card">
-<h3>🖼️ صورة + صوت = فيديو</h3>
-<label>1️⃣ اختر الصورة</label>
-<input type="file" id="imgFile" accept="image/*">
-<img id="imgPreview" class="prev">
-<label>2️⃣ اختر الصوت - موسيقى أو تعليق</label>
-<input type="file" id="imgAudioFile" accept="audio/*">
-<audio id="imgAudioPreview" controls style="width:100%;display:none;margin-top:8px"></audio>
-<p id="imgAudioStatus" style="font-size:12px;color:#ff9f43">لم تختر صوت بعد</p>
-<label>3️⃣ مدة الفيديو</label>
-<select id="imgDuration">
-<option value="auto">تلقائي - على قد الصوت</option>
-<option value="10">10 ثواني</option>
-<option value="15">15 ثانية</option>
-<option value="30">30 ثانية</option>
-<option value="60">60 ثانية</option>
-</select>
-<label>✍️ نص على الصورة</label>
-<input type="text" id="imgText" value="أجه آجمار - 26361821">
-<button class="bImg" id="btnMake">✨ اصنع الفيديو الآن</button>
-<div class="status" id="imgStatus">جاهز - اختر الصورة والصوت</div>
-<video id="imgFinalVideo" controls style="display:none;margin-top:10px"></video>
-<button class="b1" id="btnDownloadImg" style="display:none">⬇️ تحميل فيديو الصورة - اضغط هنا</button>
-</div>
-</div>
-
-</div>
+<!-- تحميل المكتبة من CDN موثوق -->
+<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/ffmpeg.min.js"></script>
 
 <script>
-function showTab(n){
-  document.getElementById('tab1').classList.toggle('show',n===1);
-  document.getElementById('tab2').classList.toggle('show',n===2);
-  document.getElementById('tb1').style.opacity=n===1?'1':'0.6';
-  document.getElementById('tb2').style.opacity=n===2?'1':'0.6';
-}
-const $=id=>document.getElementById(id);
-let camStream=null, actx=null, audioDest=null, micGain=null, musicGain=null, musicBuffer=null, musicSrc=null, musicPlaying=false, analyser=null;
-let recorder=null, chunks=[], isRecording=false;
-
-// ---------- نظام صوت بسيط يخدم ----------
-function ensureCtx(){
-  if(!actx) actx=new (window.AudioContext||window.webkitAudioContext)();
-  if(actx.state==='suspended') actx.resume();
-  if(!audioDest) audioDest=actx.createMediaStreamDestination();
-  return actx;
-}
-function setupMic(){
-  ensureCtx();
-  try{
-    let src=actx.createMediaStreamSource(camStream);
-    let filter=actx.createBiquadFilter(); filter.type='highpass'; filter.frequency.value=120;
-    micGain=actx.createGain(); micGain.gain.value=1.2;
-    let comp=actx.createDynamicsCompressor(); comp.threshold.value=-18; comp.ratio.value=8;
-    analyser=actx.createAnalyser(); analyser.fftSize=256;
-    src.connect(filter); filter.connect(micGain); micGain.connect(comp); comp.connect(analyser); analyser.connect(audioDest);
-    // لما تتكلم تنقص الموسيقى
-    setInterval(()=>{
-      if(!analyser||!musicGain||!musicPlaying) return;
-      let d=new Uint8Array(analyser.frequencyBinCount); analyser.getByteFrequencyData(d);
-      let avg=d.reduce((a,b)=>a+b,0)/d.length;
-      let target = avg>30 ? 0.04 : (parseFloat($('musicVol').value)/100);
-      try{ musicGain.gain.setTargetAtTime(target, actx.currentTime, 0.2); }catch(e){}
-    },200);
-  }catch(e){ console.log(e); }
-}
-$('btnCamOn').onclick=async()=>{
-  try{
-    $('status').textContent='⏳ جاري تشغيل الكاميرا...';
-    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:1280,height:720}, audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
-    $('realCam').srcObject=camStream;
-    setupMic();
-    $('status').textContent='✅ الكاميرا جاهزة';
-  }catch(e){ $('status').textContent='⚠️ اسمح للكاميرا: '+e.message; }
-};
-
-// ---------- الموسيقى - الطريقة الصحيحة ----------
-$('musicFile').onchange=async e=>{
-  let f=e.target.files[0]; if(!f) return;
-  $('musicStatus').textContent='⏳ جاري قراءة الموسيقى...';
-  try{
-    ensureCtx();
-    let arr=await f.arrayBuffer();
-    musicBuffer=await actx.decodeAudioData(arr.slice(0));
-    $('musicStatus').textContent='✅ جاهزة: '+f.name+' - مدتها '+Math.floor(musicBuffer.duration)+' ثانية - اضغط جرب الموسيقى';
-  }catch(err){ $('musicStatus').textContent='⚠️ جرب ملف MP3 ثاني'; }
-};
-function playMusic(){
-  if(!musicBuffer){ alert('اختر الموسيقى أولا'); return false; }
-  ensureCtx();
-  stopMusic();
-  musicSrc=actx.createBufferSource(); musicSrc.buffer=musicBuffer; musicSrc.loop=true;
-  musicGain=actx.createGain(); musicGain.gain.value=0.01;
-  musicSrc.connect(musicGain);
-  musicGain.connect(audioDest); // للتسجيل
-  musicGain.connect(actx.destination); // لتسمعها أنت
-  musicSrc.start(0);
-  musicGain.gain.linearRampToValueAtTime(parseFloat($('musicVol').value)/100, actx.currentTime+1);
-  musicPlaying=true;
-  return true;
-}
-function stopMusic(){ musicPlaying=false; if(musicSrc){ try{musicSrc.stop();}catch(e){} musicSrc=null; } }
-$('btnMusicPlay').onclick=()=>{ if(!camStream){ alert('شغل الكاميرا أولا'); return; } if(playMusic()) $('musicStatus').textContent='🎵 الموسيقى تشتغل - تسمعها؟ إذا تسمعها راح تتسجل معك 100%'; };
-$('btnMusicStop').onclick=()=>{ stopMusic(); $('musicStatus').textContent='⏸ الموسيقى متوقفة'; };
-$('musicVol').oninput=e=>{ $('musicVolVal').textContent=e.target.value+'%'; if(musicGain) musicGain.gain.value=parseFloat(e.target.value)/100; };
-
-// ---------- تصوير مباشر ----------
-$('btnStart').onclick=async()=>{
-  if(!camStream){ alert('شغل الكاميرا أولا'); return; }
-  ensureCtx();
-  if(musicBuffer) playMusic();
-  // نرسم الكاميرا في كانفاس 720x1280
-  let canvas=$('c'); let ctx=canvas.getContext('2d');
-  let drawId=null;
-  function draw(){
-    if(!isRecording && drawId) return;
-    ctx.fillStyle='#000'; ctx.fillRect(0,0,1080,1080);
-    try{
-      let v=$('realCam');
-      // تغطية كاملة
-      let vw=v.videoWidth, vh=v.videoHeight;
-      let scale=Math.max(1080/vw,1080/vh);
-      let dw=vw*scale, dh=vh*scale;
-      ctx.drawImage(v,(1080-dw)/2,(1080-dh)/2,dw,dh);
-    }catch(e){}
-    // نص فوق
-    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(0,0,1080,80);
-    ctx.fillStyle='#00e5ff'; ctx.font='900 40px Cairo, sans-serif'; ctx.textAlign='center';
-    ctx.fillText('أجه آجمار',540,55);
-    ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(0,1000,1080,80);
-    ctx.fillStyle='#fff'; ctx.font='800 32px Cairo, sans-serif';
-    ctx.fillText('Aje ajmar - 26361821',540,1055);
-    drawId=requestAnimationFrame(draw);
-  }
-  isRecording=true;
-  draw();
-  let vStream=canvas.captureStream(25);
-  let tracks=[...vStream.getVideoTracks()];
-  if(audioDest) tracks.push(...audioDest.stream.getAudioTracks());
-  let mime='video/webm;codecs=vp8,opus';
-  if(!window.MediaRecorder || !MediaRecorder.isTypeSupported(mime)) mime='video/webm';
-  recorder=new MediaRecorder(new MediaStream(tracks),{mimeType:mime, videoBitsPerSecond:2500000});
-  chunks=[];
-  recorder.ondataavailable=e=>{ if(e.data.size>0) chunks.push(e.data); };
-  recorder.onstop=()=>{
-    isRecording=false;
-    stopMusic();
-    if(!chunks.length){ $('status').textContent='⚠️ ما تم التسجيل - حاول ثاني'; return; }
-    let blob=new Blob(chunks,{type:'video/webm'});
-    let url=URL.createObjectURL(blob);
-    window._lastBlob=blob;
-    let v=$('finalVideo'); v.style.display='block'; v.src=url;
-    $('btnDownload').style.display='block';
-    $('status').textContent='✅ تم التصوير - اضغط تحميل - الحجم '+(blob.size/1048576).toFixed(1)+' MB';
-    $('btnStart').style.display='block'; $('btnStop').style.display='none';
-  };
-  recorder.start(200);
-  $('btnStart').style.display='none'; $('btnStop').style.display='block';
-  $('status').textContent='🔴 يصور الآن + الموسيقى... اضغط وقف عند الانتهاء';
-};
-$('btnStop').onclick=()=>{ if(recorder) recorder.stop(); };
-$('btnDownload').onclick=()=>{
-  if(!window._lastBlob) return;
-  let a=document.createElement('a'); a.href=URL.createObjectURL(window._lastBlob); a.download='aje-video-'+Date.now()+'.webm'; a.click();
-  $('status').textContent='✅ تم التحميل - الفيديو في ملفاتك';
-};
-
-// ---------- صورة + صوت = فيديو - بدون FFmpeg ----------
-let imgObj=null, imgAudioBuffer=null, imgActx=null;
-$('imgFile').onchange=e=>{
-  let f=e.target.files[0]; if(!f) return;
-  let url=URL.createObjectURL(f);
-  let im=new Image(); im.onload=()=>{ imgObj=im; let p=$('imgPreview'); p.src=url; p.style.display='block'; $('imgStatus').textContent='✅ الصورة جاهزة - الآن اختر الصوت'; };
-  im.src=url;
-};
-$('imgAudioFile').onchange=async e=>{
-  let f=e.target.files[0]; if(!f) return;
-  let a=$('imgAudioPreview'); a.style.display='block'; a.src=URL.createObjectURL(f);
-  $('imgAudioStatus').textContent='⏳ جاري قراءة الصوت...';
-  try{
-    if(!imgActx) imgActx=new (window.AudioContext||window.webkitAudioContext)();
-    if(imgActx.state==='suspended') await imgActx.resume();
-    let arr=await f.arrayBuffer();
-    imgAudioBuffer=await imgActx.decodeAudioData(arr.slice(0));
-    $('imgAudioStatus').textContent='✅ الصوت جاهز - مدته '+Math.floor(imgAudioBuffer.duration)+' ثانية';
-  }catch(err){ $('imgAudioStatus').textContent='⚠️ جرب ملف صوت MP3 ثاني'; }
-};
-$('btnMake').onclick=async()=>{
-  if(!imgObj){ alert('اختر الصورة أولا'); return; }
-  if(!imgAudioBuffer){ alert('اختر الصوت أولا'); return; }
-  $('imgStatus').textContent='⏳ جاري صنع الفيديو... انتظر، لا تخرج من الصفحة';
-  try{
-    if(!imgActx) imgActx=new (window.AudioContext||window.webkitAudioContext)();
-    if(imgActx.state==='suspended') await imgActx.resume();
-    let mode=$('imgDuration').value;
-    let duration = mode==='auto' ? imgAudioBuffer.duration : parseFloat(mode);
-    duration=Math.max(3, Math.min(duration, 120));
-
-    let canvas=document.createElement('canvas'); canvas.width=1080; canvas.height=1080;
-    let ctx=canvas.getContext('2d');
-    let vStream=canvas.captureStream(30);
-    let dest=imgActx.createMediaStreamDestination();
-    let src=imgActx.createBufferSource(); src.buffer=imgAudioBuffer; src.loop = mode!=='auto';
-    let gain=imgActx.createGain(); gain.gain.value=1;
-    gain.gain.setValueAtTime(0.01, imgActx.currentTime);
-    gain.gain.linearRampToValueAtTime(1, imgActx.currentTime+1);
-    src.connect(gain); gain.connect(dest); gain.connect(imgActx.destination);
-    src.start(0);
-
-    let combined=new MediaStream([...vStream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
-    let rec=new MediaRecorder(combined,{mimeType:'video/webm;codecs=vp8,opus', videoBitsPerSecond:3000000});
-    let ch=[]; rec.ondataavailable=e=>{ if(e.data.size>0) ch.push(e.data); };
-    rec.onstop=()=>{
-      let blob=new Blob(ch,{type:'video/webm'});
-      window._imgBlob=blob;
-      let v=$('imgFinalVideo'); v.style.display='block'; v.src=URL.createObjectURL(blob);
-      $('btnDownloadImg').style.display='block';
-      $('imgStatus').textContent='✅ تم صنع الفيديو - '+Math.floor(duration)+' ثانية - اضغط تحميل';
+// دالة للتحقق من نجاح تحميل المكتبة وإرسال الإشارة لبلوجر
+function checkAndSignalReady() {
+  // في النسخة 0.12، الكائن العالمي هو FFmpeg
+  if (typeof FFmpeg !== 'undefined') {
+    console.log('✅ FFmpeg library loaded successfully');
+    parent.postMessage({ action: 'iframe-active' }, '*');
+    startRender(); // بدء الاستماع للأوامر
+  } else {
+    // إذا فشلت jsdelivr، نجرب unpkg كبديل
+    console.warn('⚠️ jsdelivr failed, trying unpkg...');
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/ffmpeg.min.js';
+    script.onload = () => {
+      if (typeof FFmpeg !== 'undefined') {
+        parent.postMessage({ action: 'iframe-active' }, '*');
+        startRender();
+      } else {
+        showError('فشل تحميل المكتبة من كلا المصدرين. تأكد من اتصال الإنترنت.');
+      }
     };
-    rec.start(200);
-    let startT=performance.now();
-    function drawFrame(){
-      let elapsed=(performance.now()-startT)/1000;
-      if(elapsed>=duration){ try{rec.stop();}catch(e){} try{src.stop();}catch(e){} return; }
-      let progress=elapsed/duration;
-      ctx.fillStyle='#000'; ctx.fillRect(0,0,1080,1080);
-      let iw=imgObj.width, ih=imgObj.height;
-      let scale=Math.max(1080/iw,1080/ih);
-      let dw=iw*scale, dh=ih*scale;
-      // تقريب بطيء - يجعل الصورة تتحرك مثل الفيديو
-      let z=1+progress*0.15;
-      let w2=dw*z, h2=dh*z;
-      ctx.drawImage(imgObj,(1080-w2)/2,(1080-h2)/2,w2,h2);
-      ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(0,980,1080,100);
-      ctx.fillStyle='#00e5ff'; ctx.font='900 42px Cairo, sans-serif'; ctx.textAlign='center';
-      ctx.fillText($('imgText').value||'أجه آجمار',540,1045);
-      ctx.fillStyle='#00e5ff'; ctx.fillRect(0,1070,1080*progress,10);
-      requestAnimationFrame(drawFrame);
+    script.onerror = () => showError('تعذر تحميل مكتبة FFmpeg.');
+    document.head.appendChild(script);
+  }
+}
+
+// تشغيل الفحص فور تحميل الصفحة
+window.addEventListener('load', checkAndSignalReady);
+
+// المتغيرات العامة
+let ffmpeg = null;
+const WORKER = 'https://video-builder-proxy.mhhj032009.workers.dev';
+
+function startRender() {
+  window.addEventListener('message', async (e) => {
+    if (e.data?.action === 'render') {
+      await runRender(e.data.project);
     }
-    drawFrame();
-  }catch(err){ $('imgStatus').textContent='⚠️ فشل: '+err.message+' - جرب صورة وصوت أصغر'; }
-};
-$('btnDownloadImg').onclick=()=>{
-  if(!window._imgBlob) return;
-  let a=document.createElement('a'); a.href=URL.createObjectURL(window._imgBlob); a.download='aje-image-video-'+Date.now()+'.webm'; a.click();
-  $('imgStatus').textContent='✅ تم التحميل - الفيديو في ملفاتك';
-};
+  });
+}
+
+async function runRender(project) {
+  const statusEl = document.getElementById('status');
+  const detailEl = document.getElementById('detail');
+  const fillEl = document.getElementById('fill');
+  const errorEl = document.getElementById('error');
+
+  function update(status, detail, pct) {
+    statusEl.textContent = status;
+    detailEl.textContent = detail;
+    fillEl.style.width = `${pct}%`;
+    parent.postMessage({ action: 'progress', percent: pct, status, detail }, '*');
+  }
+
+  try {
+    update('⏳ تجهيز المحرك...', 'جاري التهيئة', 5);
+
+    // تهيئة FFmpeg
+    if (!ffmpeg) {
+      // استخدام التدمير الصحيح للكائن FFmpeg
+      const { FFmpeg: FFmpegClass } = FFmpeg; 
+      ffmpeg = new FFmpegClass();
+      await ffmpeg.load({
+        coreURL: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.js',
+        wasmURL: 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/ffmpeg-core.wasm'
+      });
+    }
+
+    const scenes = project.scenes || [];
+    if (!scenes.length) throw new Error('لا توجد مشاهد');
+
+    // 1. توليد الأصوات
+    update('🔊 جاري توليد الأصوات...', `0 / ${scenes.length}`, 15);
+    for (let i = 0; i < scenes.length; i++) {
+      const sc = scenes[i];
+      const res = await fetch(`${WORKER}/api/tts`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ text: sc.text, voice: sc.voice || 'ar-SA-ZariyahNeural', rate: 1.0 })
+      });
+      if (!res.ok) throw new Error(`فشل الصوت ${i+1}`);
+      ffmpeg.writeFile(`a${i}.wav`, new Uint8Array(await res.arrayBuffer()));
+      update('🔊 الأصوات...', `${i+1}/${scenes.length}`, 15 + (i/scenes.length)*20);
+    }
+
+    // 2. تحميل الوسائط
+    update('🖼️ تحميل الخلفيات...', '0%', 40);
+    for (let i = 0; i < scenes.length; i++) {
+      const sc = scenes[i];
+      if (sc.mediaUrl) {
+        try {
+          const r = await fetch(sc.mediaUrl);
+          const b = await r.blob();
+          const ext = sc.mediaType === 'video' ? 'mp4' : 'jpg';
+          ffmpeg.writeFile(`m${i}.${ext}`, new Uint8Array(await b.arrayBuffer()));
+        } catch {
+          // خلفية سوداء عند الفشل
+          const c = document.createElement('canvas'); c.width=1280; c.height=720;
+          const ctx = c.getContext('2d'); ctx.fillStyle='#000'; ctx.fillRect(0,0,1280,720);
+          const d = c.toDataURL('image/jpeg').split(',')[1];
+          const bin = atob(d); const arr = new Uint8Array(bin.length);
+          for(let j=0;j<bin.length;j++) arr[j]=bin.charCodeAt(j);
+          ffmpeg.writeFile(`m${i}.jpg`, arr);
+        }
+      } else {
+        // خلفية سوداء افتراضية
+        const c = document.createElement('canvas'); c.width=1280; c.height=720;
+        const ctx = c.getContext('2d'); ctx.fillStyle='#000'; ctx.fillRect(0,0,1280,720);
+        const d = c.toDataURL('image/jpeg').split(',')[1];
+        const bin = atob(d); const arr = new Uint8Array(bin.length);
+        for(let j=0;j<bin.length;j++) arr[j]=bin.charCodeAt(j);
+        ffmpeg.writeFile(`m${i}.jpg`, arr);
+      }
+      update('🖼️ الخلفيات...', `${i+1}/${scenes.length}`, 40 + (i/scenes.length)*20);
+    }
+
+    // 3. دمج المشاهد
+    update('🎬 دمج المشاهد...', '0%', 70);
+    let listContent = '';
+    for (let i = 0; i < scenes.length; i++) {
+      const sc = scenes[i];
+      const isVid = sc.mediaType === 'video' && sc.mediaUrl;
+      const ext = isVid ? 'mp4' : 'jpg';
+      
+      // أمر ffmpeg لكل مشهد
+      await ffmpeg.exec([
+        '-y',
+        '-i', `m${i}.${ext}`,
+        '-i', `a${i}.wav`,
+        '-c:v', 'libx264', '-preset', 'veryfast',
+        '-c:a', 'aac',
+        '-t', String(sc.duration || 5),
+        '-shortest',
+        '-pix_fmt', 'yuv420p',
+        '-vf', isVid ? 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2' : 'scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720',
+        `scene${i}.mp4`
+      ]);
+      
+      listContent += `file 'scene${i}.mp4'\n`;
+      update('🎬 الدمج...', `${i+1}/${scenes.length}`, 70 + (i/scenes.length)*20);
+    }
+
+    // 4. الدمج النهائي
+    update('🔗 تجميع الفيديو...', '90%', 90);
+    ffmpeg.writeFile('list.txt', listContent);
+    await ffmpeg.exec(['-f', 'concat', '-safe', '0', '-i', 'list.txt', '-c', 'copy', 'final.mp4']);
+
+    // 5. الإرسال
+    update('💾 الحفظ...', '95%', 95);
+    const data = await ffmpeg.readFile('final.mp4');
+    const blob = new Blob([data.buffer], { type: 'video/mp4' });
+    const url = URL.createObjectURL(blob);
+    
+    update('✅ تم!', '100%', 100);
+    parent.postMessage({ action: 'render-complete', videoUrl: url }, '*');
+
+  } catch (err) {
+    console.error(err);
+    showError(err.message);
+    parent.postMessage({ action: 'render-error', error: err.message }, '*');
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('error');
+  el.textContent = '❌ ' + msg;
+  el.style.display = 'block';
+  document.getElementById('status').textContent = 'فشل';
+}
 </script>
 </body>
 </html>
