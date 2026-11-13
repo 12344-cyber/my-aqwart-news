@@ -2,8 +2,6 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
-<meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
 <title>Mihnah Renderer</title>
 <style>
   body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0f172a; color: #f1f5f9; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
@@ -13,6 +11,7 @@
   h2 { margin-bottom: 10px; font-size: 1.5rem; }
   p { color: #94a3b8; font-size: 0.95rem; margin: 5px 0; }
   .error { color: #ef4444; margin-top: 15px; padding: 15px; background: rgba(239,68,68,0.1); border-radius: 8px; display: none; }
+  .small { font-size: 0.8rem; color: #64748b; margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -21,19 +20,32 @@
   <p id="detail">يرجى الانتظار، قد يستغرق 10-30 ثانية</p>
   <div class="bar"><div class="fill" id="fill"></div></div>
   <div id="error" class="error"></div>
+  <p class="small" id="isolation"></p>
 </div>
 
 <script type="module">
-// استيراد FFmpeg و util كـ ESM من CDN
 import { FFmpeg } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js';
-import { toBlobURL, fetchFile } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js';
+import { toBlobURL } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js';
 
 const WORKER = 'https://video-builder-proxy.mhhj032009.workers.dev';
 let ffmpeg = null;
 
-// إرسال إشارة الجاهزية إلى بلوجر
+// عرض حالة العزل للمساعدة في التشخيص
+document.getElementById('isolation').textContent =
+  self.crossOriginIsolated
+    ? '✅ الصفحة معزولة عبر الأصل (SharedArrayBuffer متاح)'
+    : '⚠️ الصفحة غير معزولة (سأستخدم النسخة أحادية الخيط)';
+
+function showError(msg) {
+  const el = document.getElementById('error');
+  el.textContent = '❌ ' + msg;
+  el.style.display = 'block';
+  document.getElementById('status').textContent = 'فشل التحميل';
+  document.getElementById('detail').textContent = 'راجع الخطأ أدناه';
+}
+
+// إشارة الجاهزية لبلوجر
 function signalReady() {
-  console.log('✅ FFmpeg ESM loaded successfully');
   parent.postMessage({ action: 'iframe-active' }, '*');
   startRender();
 }
@@ -47,10 +59,62 @@ function startRender() {
   });
 }
 
-// تشغيل الإشارة بعد تحميل الوحدة
-signalReady();
+// محاولة التحميل مع مؤقت للكشف عن التعليق
+async function initFFmpeg() {
+  const statusEl = document.getElementById('status');
+  const detailEl = document.getElementById('detail');
 
-// دالة تحديث الواجهة
+  statusEl.textContent = '⏳ تحميل النواة...';
+  detailEl.textContent = 'جاري تحميل ملفات FFmpeg الأساسية';
+
+  // النسخة أحادية الخيط: @ffmpeg/core (وليس core-mt)
+  const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm';
+
+  ffmpeg = new FFmpeg();
+
+  // مراقبة السجلات للكشف عن أخطاء التحميل
+  ffmpeg.on('log', ({ message }) => {
+    console.log('[FFmpeg]', message);
+    if (message.includes('worker') || message.includes('load')) {
+      detailEl.textContent = 'تحميل: ' + message.slice(0, 80);
+    }
+  });
+
+  // مؤقت أمان: إذا تجاوز التحميل 25 ثانية، أظهر خطأ
+  const timeout = setTimeout(() => {
+    if (!ffmpeg.loaded) {
+      showError('انتهت مهلة تحميل FFmpeg (25 ثانية). قد يكون CDN محظورًا أو الشبكة بطيئة. جرّب تحديث الصفحة.');
+    }
+  }, 25000);
+
+  try {
+    await ffmpeg.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    });
+
+    clearTimeout(timeout);
+
+    if (!ffmpeg.loaded) {
+      throw new Error('لم يتم تحميل FFmpeg بشكل كامل (loaded = false)');
+    }
+
+    document.getElementById('fill').style.width = '100%';
+    statusEl.textContent = '✅ المحرك جاهز';
+    detailEl.textContent = 'بانتظار أوامر التصيير';
+    signalReady();
+
+  } catch (err) {
+    clearTimeout(timeout);
+    console.error('FFmpeg load error:', err);
+    showError(err.message || 'فشل غير معروف أثناء تحميل FFmpeg');
+  }
+}
+
+// بدء التحميل فورًا
+initFFmpeg();
+
+// ---------- دوال التصيير (كما هي، مع تعديلات طفيفة) ----------
 function updateUI(status, detail, pct) {
   document.getElementById('status').textContent = status;
   document.getElementById('detail').textContent = detail;
@@ -58,27 +122,14 @@ function updateUI(status, detail, pct) {
   parent.postMessage({ action: 'progress', percent: pct, status, detail }, '*');
 }
 
-// عرض الخطأ
-function showError(msg) {
-  const el = document.getElementById('error');
-  el.textContent = '❌ ' + msg;
-  el.style.display = 'block';
-  document.getElementById('status').textContent = 'فشل';
-}
-
 async function runRender(project) {
-  try {
-    updateUI('⏳ تجهيز المحرك...', 'جاري التهيئة', 5);
+  if (!ffmpeg || !ffmpeg.loaded) {
+    parent.postMessage({ action: 'render-error', error: 'FFmpeg غير جاهز' }, '*');
+    return;
+  }
 
-    // تهيئة FFmpeg باستخدام toBlobURL لتجاوز CORS
-    if (!ffmpeg) {
-      ffmpeg = new FFmpeg();
-      const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm';
-      await ffmpeg.load({
-        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-      });
-    }
+  try {
+    updateUI('⏳ تجهيز المشاهد...', 'جاري التهيئة', 5);
 
     const scenes = project.scenes || [];
     if (!scenes.length) throw new Error('لا توجد مشاهد');
@@ -161,7 +212,6 @@ async function runRender(project) {
   }
 }
 
-// دالة مساعدة لكتابة خلفية سوداء
 async function writeBlackFrame(i) {
   const c = document.createElement('canvas'); c.width = 1280; c.height = 720;
   const ctx = c.getContext('2d'); ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 1280, 720);
