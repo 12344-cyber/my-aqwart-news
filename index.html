@@ -1,225 +1,65 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>Mihnah Renderer</title>
-<style>
-  body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0f172a; color: #f1f5f9; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
-  .box { text-align: center; max-width: 600px; background: #1e293b; padding: 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-  .bar { height: 12px; background: #334155; border-radius: 6px; margin: 20px 0; overflow: hidden; }
-  .fill { height: 100%; background: linear-gradient(90deg, #3fe890, #60f8b0); width: 0%; transition: width 0.4s ease; }
-  h2 { margin-bottom: 10px; font-size: 1.5rem; }
-  p { color: #94a3b8; font-size: 0.95rem; margin: 5px 0; }
-  .error { color: #ef4444; margin-top: 15px; padding: 15px; background: rgba(239,68,68,0.1); border-radius: 8px; display: none; }
-  .small { font-size: 0.8rem; color: #64748b; margin-top: 10px; }
-</style>
+    <meta charset="UTF-8">
+    <title>مطور نصوص يونيتي الاحترافي V2</title>
+    <link rel="preconnect" href="https://googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://googleapis.com/css2?family=Cairo:wght@900&family=Lalezar&display=swap" rel="stylesheet">
+    <style>
+        body{background:#0b0f19;color:#f8fafc;font-family:'Cairo','Arial Black',sans-serif;text-align:center;padding:20px}
+        .container{max-width:1000px;margin:auto;background:#151f32;padding:25px;border-radius:20px;box-shadow:0 20px 40px rgba(0,0,0,0.5);display:grid;grid-template-columns:1.2fr 1fr;gap:20px}
+        .controls{display:flex;flex-direction:column;gap:12px;background:rgba(0,0,0,0.2);padding:15px;border-radius:12px}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        .form-group{display:flex;flex-direction:column;gap:5px;text-align:right}
+        input,select{padding:10px;border-radius:6px;border:1px solid #334155;background:#0b0f19;color:white;font-family:inherit}
+        .color-group{display:flex;align-items:center;gap:8px;background:#0b0f19;padding:4px 8px;border-radius:6px;border:1px solid #334155}
+        input[type="color"]{border:none;width:30px;height:30px;cursor:pointer;background:none}
+        .preview-area{background-image:linear-gradient(45deg,#1e293b 25%,transparent 25%),linear-gradient(-45deg,#1e293b 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#1e293b 75%),linear-gradient(-45deg,transparent 75%,#1e293b 75%);background-size:20px 20px;border-radius:12px;border:2px dashed #334155;min-height:280px;display:flex;align-items:center;justify-content:center;overflow:auto;box-sizing:border-box}
+        canvas{max-width:100%;height:auto}
+        .btn-download{background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:white;border:none;padding:14px;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(34,197,94,0.3);width:100%}
+    </style>
 </head>
 <body>
-<div class="box">
-  <h2 id="status">🔄 جاري تحميل المحرك...</h2>
-  <p id="detail">يرجى الانتظار، قد يستغرق 10-30 ثانية</p>
-  <div class="bar"><div class="fill" id="fill"></div></div>
-  <div id="error" class="error"></div>
-  <p class="small" id="isolation"></p>
-</div>
-
-<script type="module">
-import { FFmpeg } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js';
-import { toBlobURL } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js';
-
-const WORKER = 'https://video-builder-proxy.mhhj032009.workers.dev';
-let ffmpeg = null;
-
-// عرض حالة العزل للمساعدة في التشخيص
-document.getElementById('isolation').textContent =
-  self.crossOriginIsolated
-    ? '✅ الصفحة معزولة عبر الأصل (SharedArrayBuffer متاح)'
-    : '⚠️ الصفحة غير معزولة (سأستخدم النسخة أحادية الخيط)';
-
-function showError(msg) {
-  const el = document.getElementById('error');
-  el.textContent = '❌ ' + msg;
-  el.style.display = 'block';
-  document.getElementById('status').textContent = 'فشل التحميل';
-  document.getElementById('detail').textContent = 'راجع الخطأ أدناه';
-}
-
-// إشارة الجاهزية لبلوجر
-function signalReady() {
-  parent.postMessage({ action: 'iframe-active' }, '*');
-  startRender();
-}
-
-// بدء الاستماع لأوامر التصيير
-function startRender() {
-  window.addEventListener('message', async (e) => {
-    if (e.data?.action === 'render') {
-      await runRender(e.data.project);
-    }
-  });
-}
-
-// محاولة التحميل مع مؤقت للكشف عن التعليق
-async function initFFmpeg() {
-  const statusEl = document.getElementById('status');
-  const detailEl = document.getElementById('detail');
-
-  statusEl.textContent = '⏳ تحميل النواة...';
-  detailEl.textContent = 'جاري تحميل ملفات FFmpeg الأساسية';
-
-  // النسخة أحادية الخيط: @ffmpeg/core (وليس core-mt)
-  const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm';
-
-  ffmpeg = new FFmpeg();
-
-  // مراقبة السجلات للكشف عن أخطاء التحميل
-  ffmpeg.on('log', ({ message }) => {
-    console.log('[FFmpeg]', message);
-    if (message.includes('worker') || message.includes('load')) {
-      detailEl.textContent = 'تحميل: ' + message.slice(0, 80);
-    }
-  });
-
-  // مؤقت أمان: إذا تجاوز التحميل 25 ثانية، أظهر خطأ
-  const timeout = setTimeout(() => {
-    if (!ffmpeg.loaded) {
-      showError('انتهت مهلة تحميل FFmpeg (25 ثانية). قد يكون CDN محظورًا أو الشبكة بطيئة. جرّب تحديث الصفحة.');
-    }
-  }, 25000);
-
-  try {
-    await ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-    });
-
-    clearTimeout(timeout);
-
-    if (!ffmpeg.loaded) {
-      throw new Error('لم يتم تحميل FFmpeg بشكل كامل (loaded = false)');
-    }
-
-    document.getElementById('fill').style.width = '100%';
-    statusEl.textContent = '✅ المحرك جاهز';
-    detailEl.textContent = 'بانتظار أوامر التصيير';
-    signalReady();
-
-  } catch (err) {
-    clearTimeout(timeout);
-    console.error('FFmpeg load error:', err);
-    showError(err.message || 'فشل غير معروف أثناء تحميل FFmpeg');
-  }
-}
-
-// بدء التحميل فورًا
-initFFmpeg();
-
-// ---------- دوال التصيير (كما هي، مع تعديلات طفيفة) ----------
-function updateUI(status, detail, pct) {
-  document.getElementById('status').textContent = status;
-  document.getElementById('detail').textContent = detail;
-  document.getElementById('fill').style.width = `${pct}%`;
-  parent.postMessage({ action: 'progress', percent: pct, status, detail }, '*');
-}
-
-async function runRender(project) {
-  if (!ffmpeg || !ffmpeg.loaded) {
-    parent.postMessage({ action: 'render-error', error: 'FFmpeg غير جاهز' }, '*');
-    return;
-  }
-
-  try {
-    updateUI('⏳ تجهيز المشاهد...', 'جاري التهيئة', 5);
-
-    const scenes = project.scenes || [];
-    if (!scenes.length) throw new Error('لا توجد مشاهد');
-
-    // 1. توليد الأصوات
-    updateUI('🔊 جاري توليد الأصوات...', `0 / ${scenes.length}`, 15);
-    for (let i = 0; i < scenes.length; i++) {
-      const sc = scenes[i];
-      const res = await fetch(`${WORKER}/api/tts`, {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ text: sc.text, voice: sc.voice || 'ar-SA-ZariyahNeural', rate: 1.0 })
-      });
-      if (!res.ok) throw new Error(`فشل الصوت ${i+1}`);
-      await ffmpeg.writeFile(`a${i}.wav`, new Uint8Array(await res.arrayBuffer()));
-      updateUI('🔊 الأصوات...', `${i+1}/${scenes.length}`, 15 + (i/scenes.length)*20);
-    }
-
-    // 2. تحميل الوسائط
-    updateUI('🖼️ تحميل الخلفيات...', '0%', 40);
-    for (let i = 0; i < scenes.length; i++) {
-      const sc = scenes[i];
-      if (sc.mediaUrl) {
-        try {
-          const r = await fetch(sc.mediaUrl);
-          const b = await r.blob();
-          const ext = sc.mediaType === 'video' ? 'mp4' : 'jpg';
-          await ffmpeg.writeFile(`m${i}.${ext}`, new Uint8Array(await b.arrayBuffer()));
-        } catch {
-          await writeBlackFrame(i);
+    <div class="container">
+        <div class="controls">
+            <div class="form-group"><label>النص:</label><input type="text" id="textInput" value="مستوى جديد"></div>
+            <div class="form-row">
+                <div class="form-group"><label>الخط:</label><select id="fontSelect"><option value="Cairo">القاهرة</option><option value="Lalezar">بازار</option></select></div>
+                <div class="form-group"><label>الحجم:</label><input type="number" id="fontSize" value="90"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>لون الكلمة الأساسي:</label><div class="color-group"><input type="color" id="textColor" value="#ffffff"><span id="textColorHex">#ffffff</span></div></div>
+                <div class="form-group"><label>لون الحواف (Stroke):</label><div class="color-group"><input type="color" id="strokeColor" value="#0f172a"><span id="strokeColorHex">#0f172a</span></div></div>
+            </div>
+            <div class="form-group"><label>سُمك الحواف:</label><input type="number" id="strokeWidth" value="8"></div>
+            <button class="btn-download" id="downloadBtn">تحميل الصورة PNG الشفافة</button>
+        </div>
+        <div class="preview-area"><canvas id="textCanvas"></canvas></div>
+    </div>
+    <script>
+        const canvas=document.getElementById('textCanvas'),ctx=canvas.getContext('2d');
+        const textInput=document.getElementById('textInput'),fontSelect=document.getElementById('fontSelect'),fontSizeInput=document.getElementById('fontSize'),textColor=document.getElementById('textColor'),strokeColor=document.getElementById('strokeColor'),strokeWidthInput=document.getElementById('strokeWidth'),textColorHex=document.getElementById('textColorHex'),strokeColorHex=document.getElementById('strokeColorHex'),downloadBtn=document.getElementById('downloadBtn');
+        
+        function updateCanvas(){
+            const t=textInput.value||" ",f=fontSelect.value,s=parseInt(fontSizeInput.value)||50,w=parseInt(strokeWidthInput.value)||0;
+            textColorHex.innerText=textColor.value;strokeColorHex.innerText=strokeColor.value;
+            ctx.font=`900 ${s}px '${f}','Arial Black',sans-serif`;
+            const m=ctx.measureText(t),extra=(w*2)+60;
+            canvas.width=Math.ceil(m.width)+extra;canvas.height=s*1.6+extra;
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.font=`900 ${s}px '${f}','Arial Black',sans-serif`;ctx.textBaseline='middle';ctx.textAlign='center';
+            const x=canvas.width/2,y=canvas.height/2;
+            if(w>0){ctx.strokeStyle=strokeColor.value;ctx.lineWidth=w;ctx.lineJoin='round';ctx.strokeText(t,x,y)}
+            ctx.fillStyle=textColor.value;ctx.fillText(t,x,y);
         }
-      } else {
-        await writeBlackFrame(i);
-      }
-      updateUI('🖼️ الخلفيات...', `${i+1}/${scenes.length}`, 40 + (i/scenes.length)*20);
-    }
-
-    // 3. دمج المشاهد
-    updateUI('🎬 دمج المشاهد...', '0%', 70);
-    let listContent = '';
-    for (let i = 0; i < scenes.length; i++) {
-      const sc = scenes[i];
-      const isVid = sc.mediaType === 'video' && sc.mediaUrl;
-      const ext = isVid ? 'mp4' : 'jpg';
-
-      await ffmpeg.exec([
-        '-y',
-        '-i', `m${i}.${ext}`,
-        '-i', `a${i}.wav`,
-        '-c:v', 'libx264', '-preset', 'veryfast',
-        '-c:a', 'aac',
-        '-t', String(sc.duration || 5),
-        '-shortest',
-        '-pix_fmt', 'yuv420p',
-        '-vf', isVid ? 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2' : 'scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720',
-        `scene${i}.mp4`
-      ]);
-
-      listContent += `file 'scene${i}.mp4'\n`;
-      updateUI('🎬 الدمج...', `${i+1}/${scenes.length}`, 70 + (i/scenes.length)*20);
-    }
-
-    // 4. الدمج النهائي
-    updateUI('🔗 تجميع الفيديو...', '90%', 90);
-    await ffmpeg.writeFile('list.txt', listContent);
-    await ffmpeg.exec(['-f', 'concat', '-safe', '0', '-i', 'list.txt', '-c', 'copy', 'final.mp4']);
-
-    // 5. الإرسال
-    updateUI('💾 الحفظ...', '95%', 95);
-    const data = await ffmpeg.readFile('final.mp4');
-    const blob = new Blob([data.buffer], { type: 'video/mp4' });
-    const url = URL.createObjectURL(blob);
-
-    updateUI('✅ تم!', '100%', 100);
-    parent.postMessage({ action: 'render-complete', videoUrl: url }, '*');
-
-  } catch (err) {
-    console.error(err);
-    showError(err.message);
-    parent.postMessage({ action: 'render-error', error: err.message }, '*');
-  }
-}
-
-async function writeBlackFrame(i) {
-  const c = document.createElement('canvas'); c.width = 1280; c.height = 720;
-  const ctx = c.getContext('2d'); ctx.fillStyle = '#000'; ctx.fillRect(0, 0, 1280, 720);
-  const d = c.toDataURL('image/jpeg').split(',')[1];
-  const bin = atob(d); const arr = new Uint8Array(bin.length);
-  for (let j = 0; j < bin.length; j++) arr[j] = bin.charCodeAt(j);
-  await ffmpeg.writeFile(`m${i}.jpg`, arr);
-}
-</script>
+        [textInput,fontSelect,fontSizeInput,textColor,strokeColor,strokeWidthInput].forEach(i=>{i.addEventListener('input',updateCanvas);i.addEventListener('change',updateCanvas)});
+        window.onload=function(){updateCanvas();setTimeout(updateCanvas,100)};
+        updateCanvas();
+        downloadBtn.addEventListener('click',()=>{
+            const t=textInput.value.trim()||'unity-text',l=document.createElement('a');
+            l.download=`${t}.png`;l.href=canvas.toDataURL('image/png');l.click();
+        });
+    </script>
 </body>
 </html>
