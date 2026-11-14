@@ -1,1386 +1,450 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <!-- تم تحديث هذا السطر لدعم المساحة الآمنة والشاشات الكاملة -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>استوديو فليد - Fleed Studio</title>
-  
-  <!-- مكتبة قص وتعديل الصور Cropper.js -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-
-  <style>
-    :root {
-      --bg-main: #f8fafc;
-      --bg-card: #ffffff;
-      --bg-sidebar: #ffffff;
-      --text-primary: #0f172a;
-      --text-secondary: #64748b;
-      --border-color: #e2e8f0;
-      --accent-color: #2563eb;
-      --bg-msg-mine: #2563eb;
-      --text-msg-mine: #ffffff;
-      --shadow-color: rgba(0, 0, 0, 0.05);
-    }
-
-    body.dark-mode {
-      --bg-main: #000000;
-      --bg-card: #0a0a0a;
-      --bg-sidebar: #0a0a0a;
-      --text-primary: #f8fafc;
-      --text-secondary: #a1a1aa;
-      --border-color: #27272a;
-      --accent-color: #3b82f6;
-      --bg-msg-mine: #2563eb;
-      --text-msg-mine: #ffffff;
-      --shadow-color: rgba(0, 0, 0, 0.8);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0; padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      transition: background-color 0.2s, color 0.2s;
-    }
-
-    html, body {
-      height: 100%; 
-      height: 100dvh; /* دعم ارتفاع الشاشة الديناميكي للهواتف */
-      width: 100%;
-      background-color: var(--bg-main);
-      color: var(--text-primary);
-      overflow: hidden;
-    }
-
-    .hidden { display: none !important; }
-
-    /* وضع الكمبيوتر */
-    body.desktop-mode-active {
-      display: flex; flex-direction: row; overflow: hidden;
-    }
-    body.desktop-mode-active #chat-screen { flex: 1; position: relative; border-left: 1px solid var(--border-color); }
-    body.desktop-mode-active #sidebar {
-      position: relative; right: 0; width: 340px; transition: none; border-left: none; 
-      display: flex !important; z-index: 100;
-    }
-    body.desktop-mode-active #close-sidebar-btn { display: none; }
-    body.desktop-mode-active #open-sidebar-btn { cursor: default; }
-
-    /* علامة التوثيق */
-    .verified-badge {
-      display: inline-flex; align-items: center; justify-content: center;
-      width: 15px; height: 15px; background: #2563eb; color: #ffffff;
-      border-radius: 50%; font-size: 10px; margin: 0 4px; vertical-align: middle; font-weight: bold;
-    }
-    .verified-badge::after { content: 'v'; }
-
-    /* المنشن */
-    .mention-tag {
-      background-color: #dbeafe; color: #1d4ed8;
-      padding: 2px 6px; border-radius: 6px; font-weight: bold;
-    }
-    body.dark-mode .mention-tag {
-      background-color: rgba(59, 130, 246, 0.25); color: #93c5fd;
-    }
-
-    /* بطاقة النيترو والعملات */
-    .nitro-card {
-      background: linear-gradient(135deg, #8b5cf6, #ec4899);
-      color: #fff; padding: 16px; border-radius: 18px; text-align: center;
-      display: flex; flex-direction: column; gap: 10px;
-      box-shadow: 0 6px 20px rgba(236, 72, 153, 0.3);
-    }
-
-    .fen-badge {
-      display: inline-flex; align-items: center; gap: 8px;
-      background: linear-gradient(135deg, #bf953f 0%, #fcf6ba 25%, #b38728 50%, #fbf5b7 75%, #aa771c 100%);
-      color: #1c1300; padding: 6px 14px; border-radius: 25px;
-      font-weight: 800; font-size: 13px;
-      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
-      border: 1px solid #ffe57f; position: relative; overflow: hidden;
-    }
-
-    .fen-coin-icon {
-      width: 20px; height: 20px; background: radial-gradient(circle, #fff7ad 0%, #ffa000 100%);
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      font-size: 11px; font-weight: 900; color: #4a2f00; border: 1.5px solid #ffffff;
-    }
-
-    .wallet-card {
-      background: linear-gradient(145deg, rgba(255, 215, 0, 0.1), rgba(180, 130, 20, 0.05));
-      border: 1.5px solid rgba(212, 175, 55, 0.4);
-      border-radius: 18px; padding: 18px; text-align: center;
-      display: flex; flex-direction: column; gap: 10px;
-    }
-
-    /* الشاشات النوافذ */
-    .full-screen-center {
-      display: flex; justify-content: center; align-items: center;
-      width: 100vw; height: 100vh; height: 100dvh; background: var(--bg-main);
-      position: fixed; top: 0; left: 0; z-index: 2000;
-    }
-
-    .card-box {
-      background: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: 20px; padding: 25px; width: 100%; max-width: 400px;
-      box-shadow: 0 15px 35px var(--shadow-color);
-      display: flex; flex-direction: column; gap: 12px; text-align: center;
-    }
-
-    .avatar-preview {
-      width: 85px; height: 85px; border-radius: 50%;
-      object-fit: cover; border: 3px solid var(--accent-color); margin: 0 auto;
-    }
-
-    .file-input-btn {
-      position: relative; overflow: hidden; display: inline-flex;
-      align-items: center; justify-content: center;
-      background: var(--accent-color); color: #ffffff;
-      padding: 10px 18px; border-radius: 10px; cursor: pointer;
-      font-size: 13px; font-weight: bold; border: none; gap: 6px;
-    }
-
-    .file-input-btn input[type="file"] {
-      position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-    }
-
-    input[type="text"], input[type="password"], input[type="number"], textarea, select {
-      padding: 10px; background: var(--bg-main);
-      border: 1px solid var(--border-color); border-radius: 10px;
-      color: var(--text-primary); outline: none; font-size: 13px; width: 100%;
-    }
-
-    .primary-btn {
-      padding: 10px 14px; background-color: var(--accent-color);
-      color: #fff; border: none; border-radius: 10px;
-      cursor: pointer; font-weight: bold; font-size: 13px;
-      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    }
-
-    .primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    /* الهيكل الرئيسي */
-    .app-layout { 
-      display: flex; 
-      flex-direction: column; 
-      width: 100vw; 
-      height: 100vh; 
-      height: 100dvh; 
-    }
-
-    .top-bar {
-      height: 60px; background: var(--bg-card);
-      border-bottom: 1px solid var(--border-color);
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 15px; flex-shrink: 0;
-    }
-
-    .user-profile-summary { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-    .header-avatar { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent-color); }
-    .user-name-text { font-size: 15px; font-weight: 700; display: flex; align-items: center; }
-    .admin-badge { background: #ef4444; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-right: 4px; }
-
-    .top-actions { display: flex; align-items: center; gap: 8px; }
-
-    .icon-btn {
-      background: var(--bg-main); color: var(--text-primary);
-      border: 1px solid var(--border-color); padding: 8px 14px;
-      border-radius: 10px; cursor: pointer; font-size: 13px;
-      display: flex; align-items: center; gap: 6px; font-weight: 600;
-    }
-
-    /* المحادثة */
-    .chat-main-area {
-      flex: 1; display: flex; flex-direction: column;
-      width: 100%; 
-      padding: 10px; gap: 8px; position: relative;
-      overflow: hidden;
-    }
-
-    .messages-wrapper {
-      flex: 1; overflow-y: auto; padding: 15px;
-      display: flex; flex-direction: column; gap: 12px;
-      border-radius: 14px; border: 1px solid var(--border-color);
-      box-shadow: 0 4px 20px var(--shadow-color);
-      background-color: var(--bg-main);
-    }
-
-    .message-item { display: flex; gap: 10px; align-items: flex-end; max-width: 85%; position: relative; }
-    .message-item.mine { align-self: flex-end; flex-direction: row-reverse; }
-    .message-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; cursor: pointer; }
-    .message-content-box { display: flex; flex-direction: column; position: relative; }
-    .message-sender-name { font-size: 11px; color: var(--text-secondary); margin-bottom: 2px; font-weight: 600; cursor: pointer; display: flex; align-items: center; }
-    
-    .message-bubble {
-      background: var(--bg-card); color: var(--text-primary);
-      padding: 10px 14px; border-radius: 12px; font-size: 14px;
-      box-shadow: 0 2px 6px var(--shadow-color); border: 1px solid var(--border-color);
-      word-break: break-word; line-height: 1.5;
-    }
-    .message-item.mine .message-bubble {
-      background: var(--bg-msg-mine); color: var(--text-msg-mine); border: none;
-    }
-
-    /* مربع الرد الداخلي */
-    .reply-quote-box {
-      background: rgba(150, 150, 150, 0.15); border-right: 3px solid var(--accent-color);
-      padding: 6px 10px; border-radius: 6px; margin-bottom: 8px; font-size: 12px; cursor: pointer;
-    }
-    .message-item.mine .reply-quote-box {
-      background: rgba(255, 255, 255, 0.2); border-right-color: #ffffff;
-    }
-
-    /* بطاقة تطبيق HTML */
-    .html-app-card {
-      background: linear-gradient(135deg, #1e1b4b, #312e81);
-      color: #fff; padding: 12px 16px; border-radius: 12px;
-      cursor: pointer; display: flex; flex-direction: column; gap: 6px;
-      box-shadow: 0 4px 15px rgba(49, 46, 129, 0.4); text-align: center;
-      border: 1px solid #4338ca; transition: transform 0.2s;
-    }
-    .html-app-card:hover { transform: scale(1.02); }
-
-    /* القائمة الفرعية لزر + */
-    .plus-menu {
-      position: absolute; bottom: 60px; right: 15px;
-      background: var(--bg-card); border: 1px solid var(--border-color);
-      border-radius: 14px; box-shadow: 0 10px 25px var(--shadow-color);
-      display: flex; flex-direction: column; gap: 6px; padding: 8px; z-index: 100;
-    }
-    .plus-menu button {
-      background: var(--bg-main); border: 1px solid var(--border-color);
-      padding: 10px 16px; border-radius: 10px; cursor: pointer;
-      color: var(--text-primary); font-weight: bold; font-size: 13px;
-      display: flex; align-items: center; gap: 8px;
-    }
-
-    .form-container-wrapper {
-      display: flex; flex-direction: column; position: relative; flex-shrink: 0;
-    }
-
-    .action-preview-box {
-      background: var(--bg-card); padding: 8px 12px; border-radius: 12px 12px 0 0;
-      border: 1px solid var(--border-color); border-bottom: none;
-      display: flex; justify-content: space-between; align-items: center; margin-bottom: -10px; z-index: 1;
-    }
-
-    .bottom-input-bar {
-      display: flex; gap: 8px; background: var(--bg-card); position: relative; z-index: 2;
-      padding: 8px 12px; border-radius: 12px; border: 1px solid var(--border-color); align-items: center;
-    }
-
-    /* الشريط السفلي للأقسام مع دعم المساحة الآمنة لتفادي التداخل في الهواتف الحديثة */
-    .bottom-nav-bar {
-      background: var(--bg-card);
-      border-top: 1px solid var(--border-color);
-      display: flex; justify-content: space-around; align-items: center; flex-shrink: 0; z-index: 10;
-      padding-top: 8px;
-      padding-bottom: calc(8px + env(safe-area-inset-bottom));
-    }
-
-    .nav-tab {
-      display: flex; flex-direction: column; align-items: center; gap: 3px;
-      background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 11px; font-weight: 600; width: 20%;
-    }
-    .nav-tab.active { color: var(--accent-color); font-weight: bold; }
-
-    /* Modals & Sidebar */
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 998; display: none; }
-    .modal-overlay.active { display: block; }
-
-    .sidebar-drawer {
-      position: fixed; top: 0; right: -340px; width: 320px; height: 100%; height: 100dvh;
-      background: var(--bg-sidebar); border-left: 1px solid var(--border-color);
-      z-index: 999; padding: 20px; display: flex; flex-direction: column; gap: 12px;
-      transition: right 0.3s ease; overflow-y: auto;
-    }
-    .sidebar-drawer.open { right: 0; }
-
-    .center-modal {
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      background: var(--bg-card); border: 1px solid var(--border-color);
-      border-radius: 20px; padding: 20px; width: 92%; max-width: 440px;
-      z-index: 2500; text-align: center; display: flex; flex-direction: column; gap: 12px;
-      box-shadow: 0 10px 30px var(--shadow-color);
-    }
-
-    /* قسم الرسم */
-    .drawing-full-screen {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
-      background: var(--bg-main); z-index: 4000; display: flex; flex-direction: column;
-    }
-    .drawing-header {
-      height: 55px; background: var(--bg-card); border-bottom: 1px solid var(--border-color);
-      display: flex; align-items: center; justify-content: space-between; padding: 0 15px;
-    }
-    .drawing-tools-bar {
-      background: var(--bg-card); padding: 8px 15px; border-bottom: 1px solid var(--border-color);
-      display: flex; gap: 10px; align-items: center; overflow-x: auto; flex-shrink: 0;
-    }
-    .drawing-canvas-area {
-      flex: 1; overflow: hidden; display: flex; justify-content: center; align-items: center;
-      position: relative; background: #64748b; touch-action: none;
-    }
-    .drawing-paper-wrapper {
-      position: relative; width: 350px; height: 450px; background: #ffffff;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3); border-radius: 12px; transform-origin: center center;
-    }
-    .drawing-layer-canvas {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 12px;
-    }
-
-    .msg-dropdown {
-      position: absolute; top: 100%; right: 0; background: var(--bg-card);
-      border: 1px solid var(--border-color); border-radius: 10px;
-      box-shadow: 0 6px 18px var(--shadow-color); z-index: 100;
-      display: flex; flex-direction: column; min-width: 90px; overflow: hidden;
-    }
-    .msg-dropdown button {
-      background: none; border: none; padding: 10px; border-bottom: 1px solid var(--border-color);
-      text-align: right; font-size: 12px; cursor: pointer; color: var(--text-primary); font-weight: bold;
-    }
-    .msg-dropdown button:last-child { border-bottom: none; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aje ajmar - فيديو</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{background:#021533;font-family:Cairo,sans-serif;padding:10px;color:#fff;margin:0}
+.box{max-width:900px;margin:auto}
+.card{background:#081a33;padding:14px;border-radius:14px;border:1px solid #164a6b;margin-bottom:10px}
+h3{color:#00e5ff;margin:8px 0}
+label{display:block;font-size:13px;margin:8px 0 4px;color:#b8d0e8}
+input[type=text],select{width:100%;padding:11px;border-radius:10px;border:1px solid #164a6b;background:#04122a;color:#fff;font-family:Cairo,sans-serif}
+input[type=file]{width:100%;padding:8px;background:#04122a;border-radius:10px}
+input[type=range]{width:100%;accent-color:#00e5ff}
+button{padding:13px;border:none;border-radius:12px;font-weight:900;font-family:Cairo,sans-serif;cursor:pointer;font-size:15px;width:100%;margin-top:8px}
+.b1{background:#00e5ff;color:#021533}.b2{background:#9c27b0;color:#fff}.b3{background:#ff4757;color:#fff}
+canvas{width:100%;border-radius:12px;background:#000;display:block}
+.status{padding:10px;border-radius:10px;text-align:center;font-size:13px;font-weight:700;margin-top:10px;background:#04122a;border:1px solid #164a6b}
+.ok{color:#00e5ff}.err{color:#ff4757}.busy{color:#ffc107}
+.timer{text-align:center;font-size:28px;font-weight:900;color:#ff4757;display:none}.timer.show{display:block}
+#realVideo{width:100%;border-radius:12px;background:#000;display:block;margin-top:8px}
+#realAudio{width:100%;border-radius:12px;display:none;margin-top:8px}
+</style>
 </head>
 <body>
+<div class="box">
+<div class="card">
+<h3>1 - ارفع الفيديو أو الصورة</h3>
+<input type="file" id="videoUp" accept="video/*">
+<video id="realVideo" playsinline controls muted></video>
+<div id="debug" style="text-align:center;font-size:13px;color:#ffc107;margin-top:6px">بانتظار رفع الفيديو...</div>
+<label>نص الخبر (السطر الأول أبيض والباقي أزرق)</label><input type="text" id="fullText" value="رئيس الجمهوريه يتوجه الي تركيا ويودع من قبل وزير الداخلية" maxlength="110">
+<label>الهاتف</label><input type="text" id="phoneText" value="26361821">
+<label>شعار الصفحة - يظهر في الأعلى على اليمين فقط</label><input type="file" id="logoUp" accept="image/*">
+<label>صورة (اختياري - بدل الفيديو)</label><input type="file" id="imgUp" accept="image/*">
+<label>صوت (اختياري - لدمجه مع الصورة)</label><input type="file" id="audioUp" accept="audio/*">
+<audio id="realAudio" controls></audio>
+<label>📐 جودة الإخراج</label>
+<select id="resSel">
+<option value="720">720 - أسرع وأثبت (مُوصى به للهاتف)</option>
+<option value="1080">1080 - أعلى جودة (يحتاج هاتفًا قويًا)</option>
+</select>
+<label>🔊 قوة الصوت: <span id="volVal">2.5×</span></label>
+<input type="range" id="vidVol" min="1" max="6" step="0.5" value="2.5">
+<button class="b2" id="btnStart">🎬 بدء التسجيل</button>
+<button class="b3" id="btnStop" style="display:none">⏹️ إيقاف التسجيل</button>
+<div class="timer" id="timer">00:00</div>
+<button class="b1" id="btnDownload" style="display:none">⬇️ تحميل الفيديو</button>
+<div class="status" id="status">ارفع الفيديو أو الصورة ثم اضغط تسجيل</div>
+<div style="font-size:12px;color:#7a9bbf;margin-top:8px">⚠️ افتح في Chrome وليس داخل واتساب. في واتساب: النقاط الثلاثة ← فتح في المتصفح<br>✅ لما ينتهي الفيديو، التسجيل ينتهي وحده. أو اضغط إيقاف قبل ذلك.<br>🖼️ صورة + صوت: سينتهي التسجيل تلقائياً عند انتهاء الصوت.<br>💡 إذا توقف الفيديو أثناء التسجيل: اختر 720، أو استخدم فيديو أصغر (H.264 / MP4).</div>
+</div>
+<div class="card"><h3>2 - المعاينة</h3><canvas id="c" width="720" height="720"></canvas></div>
+</div>
+<script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
+<script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const W=1600,CY='#00e5ff';
+let CW=720,S=CW/W;
+const cv=$('c'), mctx=cv.getContext('2d',{alpha:false});
+const sc=document.createElement('canvas'); sc.width=sc.height=CW; const sctx=sc.getContext('2d');
+let x=mctx;
+const videoEl=$('realVideo'), audioEl=$('realAudio'), statusEl=$('status'), timerEl=$('timer');
+let img=null, logoImg=null, videoReady=false, soundOn=true, dirty=true;
+let audioReady=false, audioSrcMade=false, audioGain=null;
+let isRecording=false, recorder=null, chunks=[], stream=null, timerInt=null, startTime=0, lastDraw=0;
+let stopNote='', lastVT=0, lastVTime=0;
+let ffmpeg = null;
+const { fetchFile } = FFmpegUtil;
 
-  <!-- شاشة اختيار الجهاز (تظهر أولاً) -->
-  <div id="device-selection-screen" class="full-screen-center hidden" style="z-index: 99999;">
-    <div class="card-box">
-      <h2>اختر نوع جهازك</h2>
-      <p style="font-size: 12px; color: var(--text-secondary);">لتحسين وتعديل عرض التطبيق ليناسب شاشتك</p>
-      <button id="btn-device-mobile" class="primary-btn" style="padding:14px; font-size:15px;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:8px;"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
-        هاتف محمول
-      </button>
-      <button id="btn-device-desktop" class="primary-btn" style="padding:14px; font-size:15px; background: #1e293b;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:8px;"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-        كمبيوتر (شاشة عريضة)
-      </button>
-    </div>
-  </div>
+async function loadFFmpeg() {
+  if (ffmpeg) return ffmpeg;
+  setStatus('busy','⏳ جاري تحميل محول الفيديو (قد يستغرق بعض الوقت)...');
+  ffmpeg = new FFmpeg();
+  ffmpeg.on('log', ({ message }) => console.log(message));
+  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+  await ffmpeg.load({
+    coreURL: await FFmpegUtil.toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+    wasmURL: await FFmpegUtil.toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+  });
+  return ffmpeg;
+}
+function setStatus(cls,msg){statusEl.className='status '+cls; statusEl.innerHTML=msg;}
+function setRes(n){ CW=n; S=CW/W; cv.width=cv.height=CW; sc.width=sc.height=CW; dirty=true; }
+$('resSel').addEventListener('change',e=>{ if(isRecording){ e.target.value=String(CW); return; } setRes(parseInt(e.target.value)); });
 
-  <!-- شاشة الحظر -->
-  <div id="banned-screen" class="full-screen-center hidden" style="z-index: 9999; background: #000;">
-    <div class="card-box" style="border-color: #ef4444;">
-      <h2 style="color:#ef4444;">تم حظر جهازك</h2>
-      <p style="font-size:13px; color:#a1a1aa;">لقد تم حظر جهازك وحذف جميع رسائلك من قبل إدارة التطبيق.</p>
-    </div>
-  </div>
+/* ---------- أدوات الرسم ---------- */
+function rr(a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.lineTo(a+w-r,b);x.quadraticCurveTo(a+w,b,a+w,b+r);x.lineTo(a+w,b+h-r);x.quadraticCurveTo(a+w,b+h,a+w-r,b+h);x.lineTo(a+r,b+h);x.quadraticCurveTo(a,b+h,a,b+h-r);x.lineTo(a,b+r);x.quadraticCurveTo(a,b,a+r,b);x.closePath();}
+function glow(c,b){x.shadowColor=c;x.shadowBlur=b;}
+function noGlow(){x.shadowBlur=0;x.shadowColor='transparent';}
+function person(cx,cy,s){
+  let g=x.createLinearGradient(0,cy-s/2,0,cy+s/2);g.addColorStop(0,'#35e0ff');g.addColorStop(1,'#00a9e8');
+  x.fillStyle=g;
+  x.beginPath();x.arc(cx,cy-s*0.2,s*0.26,0,Math.PI*2);x.fill();
+  x.beginPath();x.moveTo(cx-s*0.5,cy+s*0.5);
+  x.bezierCurveTo(cx-s*0.5,cy+s*0.12,cx-s*0.3,cy+s*0.1,cx,cy+s*0.1);
+  x.bezierCurveTo(cx+s*0.3,cy+s*0.1,cx+s*0.5,cy+s*0.12,cx+s*0.5,cy+s*0.5);
+  x.closePath();x.fill();
+}
+// شعار الصفحة فقط - الزاوية 90 على اليمين في الأعلى - كبير 130
+function logoTopRight(){
+  let s=130, cx=W-85, cy=85;
+  if(logoImg){
+    let r=s/2;
+    x.save();x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.clip();
+    let m=Math.min(logoImg.width,logoImg.height);
+    x.drawImage(logoImg,(logoImg.width-m)/2,(logoImg.height-m)/2,m,m,cx-r,cy-r,s,s);
+    x.restore();
+    x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.strokeStyle=CY;x.lineWidth=4;x.stroke();
+  }else{
+    person(cx,cy,s);
+    x.beginPath();x.arc(cx,cy,s/2,0,Math.PI*2);x.strokeStyle=CY;x.lineWidth=4;x.stroke();
+  }
+}
+function circleIcon(cx,cy){
+  x.beginPath();x.arc(cx,cy,35,0,Math.PI*2);
+  x.fillStyle='rgba(0,229,255,0.12)';x.fill();
+  x.save();glow(CY,10);x.strokeStyle=CY;x.lineWidth=3;x.stroke();x.restore();
+}
+function iconFB(cx,cy){circleIcon(cx,cy);x.fillStyle='#fff';x.font='900 50px Cairo, Arial, sans-serif';x.textAlign='center';x.textBaseline='middle';x.direction='ltr';x.fillText('f',cx+2,cy+6);}
+function iconIG(cx,cy){circleIcon(cx,cy);x.strokeStyle='#fff';x.lineWidth=3.5;rr(cx-16,cy-16,32,32,9);x.stroke();x.beginPath();x.arc(cx,cy,7.5,0,Math.PI*2);x.stroke();x.fillStyle='#fff';x.beginPath();x.arc(cx+10,cy-10,2.4,0,Math.PI*2);x.fill();}
+function iconYT(cx,cy){circleIcon(cx,cy);x.fillStyle='#fff';rr(cx-21,cy-15,42,30,9);x.fill();x.fillStyle='#0a3a5e';x.beginPath();x.moveTo(cx-6,cy-8);x.lineTo(cx+9,cy);x.lineTo(cx-6,cy+8);x.closePath();x.fill();}
+function iconTT(cx,cy){
+  circleIcon(cx,cy);x.lineCap='round';x.lineJoin='round';
+  function note(dx,dy,c){x.strokeStyle=c;x.lineWidth=5.5;x.beginPath();x.moveTo(cx+4+dx,cy-17+dy);x.lineTo(cx+4+dx,cy+8+dy);x.stroke();x.beginPath();x.arc(cx-3+dx,cy+9+dy,7.5,0,Math.PI*2);x.stroke();x.beginPath();x.moveTo(cx+4+dx,cy-17+dy);x.quadraticCurveTo(cx+6+dx,cy-8+dy,cx+16+dx,cy-8+dy);x.stroke();}
+  note(-2,1,'#00e5ff');note(0,0,'#fff');x.lineCap='butt';
+}
+function trace(pts){
+  x.save();x.strokeStyle='rgba(0,229,255,0.45)';x.lineWidth=2;glow(CY,8);x.beginPath();x.moveTo(pts[0][0],pts[0][1]);for(let i=1;i<pts.length;i++)x.lineTo(pts[i][0],pts[i][1]);x.stroke();
+  x.fillStyle=CY;[pts[0],pts[pts.length-1]].forEach(p=>{x.beginPath();x.arc(p[0],p[1],4,0,Math.PI*2);x.fill();});x.restore();
+}
+function wrap(text,maxW,fs){
+  x.font='900 '+fs+'px Cairo, sans-serif';
+  let words=text.split(/\s+/).filter(Boolean),lines=[],cur='';
+  for(let w of words){let t=cur?cur+' '+w:w;if(x.measureText(t).width>maxW&&cur){lines.push(cur);cur=w;}else cur=t;}
+  if(cur)lines.push(cur);return lines;
+}
 
-  <!-- شاشة الدخول -->
-  <div id="login-screen" class="full-screen-center hidden">
-    <div class="card-box">
-      <h2>استوديو فليد</h2>
-      <p style="font-size: 12px; color: var(--text-secondary);">سجل دخولك أو أنشئ حسابك للانضمام</p>
+/* ---------- الطبقة الثابتة - الستايل الجديد ---------- */
+function renderStatic(){
+  x=sctx; x.setTransform(S,0,0,S,0,0); x.clearRect(0,0,W,W);
+  let g=x.createLinearGradient(0,0,0,W);g.addColorStop(0,'#071c3f');g.addColorStop(1,'#020b20');
+  x.fillStyle=g;x.fillRect(0,0,W,W);
+  x.save();x.strokeStyle='rgba(0,229,255,0.06)';x.lineWidth=1;
+  for(let i=0;i<=W;i+=50){x.beginPath();x.moveTo(i,0);x.lineTo(i,W);x.stroke();x.beginPath();x.moveTo(0,i);x.lineTo(W,i);x.stroke();}
+  x.restore();
+  trace([[32,300],[32,1000]]);trace([[52,420],[52,560],[34,580]]);trace([[10,1180],[10,1420]]);
+  trace([[1568,330],[1568,1000]]);trace([[1548,430],[1548,640],[1566,660]]);trace([[1590,1150],[1590,1400]]);
+  trace([[30,1370],[110,1370],[150,1410],[420,1410]]);trace([[1570,1360],[1480,1360],[1440,1400],[1250,1400]]);
+  trace([[40,120],[100,120],[140,80]]);trace([[1560,120],[1520,120],[1490,160]]);
+  x.save();glow(CY,12);x.strokeStyle='rgba(0,229,255,0.5)';x.lineWidth=3;rr(8,8,W-16,W-16,26);x.stroke();x.restore();
 
-      <img id="login-avatar-preview" class="avatar-preview" src="" alt="Avatar" />
-      <label class="file-input-btn" style="background: var(--bg-main); color: var(--text-primary); border: 1px solid var(--border-color);">
-        اختر صورة شخصية
-        <input type="file" id="login-avatar-file" accept="image/*" />
-      </label>
+  // بلا شريط علوي - بلا اسم في الأعلى
+  // منطقة الفيديو / الصورة - بلا إطار - مساحة أكبر
+  x.fillStyle='#000';x.fillRect(10,10,1580,1118);
+  x.save();noGlow();x.strokeStyle='rgba(0,229,255,0.25)';x.lineWidth=0.5;x.strokeRect(10,10,1580,1118);x.restore();
 
-      <input type="text" id="username-input" placeholder="اسم المستخدم..." />
-      <input type="password" id="password-input" placeholder="كلمة المرور..." />
-      <button id="join-btn" class="primary-btn">الدخول للتطبيق</button>
-    </div>
-  </div>
+  // شعار الصفحة فقط في الأعلى على اليمين
+  logoTopRight();
 
-  <!-- خلفية النوافذ العائمة -->
-  <div id="modal-overlay" class="modal-overlay"></div>
+  // لوحة الخبر - مستطيل عادي - بلا خط هندسي
+  let nx=28,ny=1132,nw=1544,nh=313;
+  x.save();rr(nx,ny,nw,nh,16);
+  let ng=x.createLinearGradient(0,ny,0,ny+nh);ng.addColorStop(0,'#061836');ng.addColorStop(1,'#04122c');
+  x.fillStyle=ng;x.fill();glow(CY,10);x.strokeStyle='rgba(0,229,255,0.7)';x.lineWidth=2.5;x.stroke();x.restore();
 
-  <!-- قائمة الأعضاء -->
-  <div id="members-modal" class="center-modal hidden">
-    <h3>قائمة الأعضاء</h3>
-    <div id="members-list-container" style="display:flex; flex-direction:column; gap:8px; max-height:350px; overflow-y:auto; padding:5px;"></div>
-    <button id="close-members-btn" class="icon-btn" style="justify-content:center;">إغلاق</button>
-  </div>
-
-  <!-- نافذة تحكم وقص الأفتار -->
-  <div id="cropper-modal" class="center-modal hidden" style="z-index: 3000;">
-    <h3>تعديل وتقطير الصورة الشخصية</h3>
-    <div style="width: 100%; max-height: 280px; overflow: hidden; background: #000; border-radius: 10px;">
-      <img id="cropper-target-img" style="max-width: 100%; display: block;" />
-    </div>
-    <div style="display:flex; gap:10px;">
-      <button id="crop-save-btn" class="primary-btn" style="flex:1;">قص وحفظ</button>
-      <button id="crop-cancel-btn" class="icon-btn" style="flex:1; justify-content:center;">إلغاء</button>
-    </div>
-  </div>
-
-  <!-- نافذة البحث في GIF -->
-  <div id="gif-modal" class="center-modal hidden">
-    <h3>البحث عن صور GIF</h3>
-    <input type="text" id="gif-search-input" placeholder="اكتب للبحث عن GIF..." />
-    <div id="gif-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; max-height: 250px; overflow-y: auto;"></div>
-    <button id="close-gif-modal-btn" class="icon-btn" style="justify-content:center;">إغلاق</button>
-  </div>
-
-  <!-- قسم الرسم -->
-  <div id="drawing-section" class="drawing-full-screen hidden">
-    <div class="drawing-header">
-      <button id="close-drawing-btn" class="icon-btn">إلغاء</button>
-      <h4 style="font-weight: bold;">محرر الرسم والطبقات</h4>
-      <button id="send-drawing-btn" class="primary-btn">إرسال الرسمة</button>
-    </div>
-    <div class="drawing-tools-bar">
-      <input type="color" id="brush-color" value="#000000" style="width:30px; height:30px; cursor:pointer;" title="لون الفرشاة" />
-      <input type="range" id="brush-size" min="1" max="40" value="5" style="width:80px;" title="حجم الفرشاة" />
-      <button id="add-layer-btn" class="icon-btn">+ طبقة جديدة</button>
-      <select id="layer-select" class="icon-btn" style="padding:4px;"></select>
-      <button id="zoom-in-btn" class="icon-btn">تكبير +</button>
-      <button id="zoom-out-btn" class="icon-btn">تصغير -</button>
-      <button id="zoom-reset-btn" class="icon-btn">إعادة الضبط</button>
-      <button id="clear-canvas-btn" class="icon-btn" style="color:#ef4444;">مسح الطبقة</button>
-    </div>
-    <div class="drawing-canvas-area">
-      <div id="drawing-paper" class="drawing-paper-wrapper"></div>
-    </div>
-  </div>
-
-  <!-- قسم محرر كود HTML -->
-  <div id="html-editor-modal" class="center-modal hidden" style="max-width: 500px;">
-    <h3>محرر كود HTML</h3>
-    <textarea id="html-code-input" rows="8" placeholder="اكتب كود اللعبة أو التطبيق..."></textarea>
-    <div style="display:flex; gap:10px;">
-      <button id="send-html-btn" class="primary-btn" style="flex:1;">إرسال للدردشة</button>
-      <button id="close-html-editor-btn" class="icon-btn" style="flex:1; justify-content:center;">إغلاق</button>
-    </div>
-  </div>
-
-  <!-- مشغل تطبيق HTML -->
-  <div id="html-runner-modal" class="full-screen-center hidden" style="z-index: 5000; background:#000; flex-direction:column;">
-    <div style="width:100%; height:45px; background:#111; display:flex; justify-content:space-between; align-items:center; padding:0 15px; color:#fff;">
-      <span>تشغيل التطبيق التفاعلي</span>
-      <button id="close-html-runner-btn" class="icon-btn" style="background:#ef4444; color:#fff; border:none;">إغلاق X</button>
-    </div>
-    <iframe id="html-runner-frame" style="width:100%; height:calc(100vh - 45px); border:none; background:#fff;"></iframe>
-  </div>
-
-  <!-- القائمة الجانبية -->
-  <div id="sidebar" class="sidebar-drawer">
-    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:10px;">
-      <h3 id="sidebar-user-title">المستخدم</h3>
-      <button id="close-sidebar-btn" style="background:none; border:none; color:var(--text-secondary); cursor:pointer; font-size:18px;">X</button>
-    </div>
-
-    <img id="edit-avatar-preview" class="avatar-preview" src="" alt="Avatar" />
-    <label class="file-input-btn" style="background: var(--bg-main); color: var(--text-primary); border: 1px solid var(--border-color); text-align: center;">
-      تعديل وتقطير الصورة
-      <input type="file" id="edit-avatar-file" accept="image/*" />
-    </label>
-
-    <div class="wallet-card">
-      <span style="font-size: 12px; font-weight: bold; color: #b38728;">محفظتي الذهبية</span>
-      <div class="fen-badge" style="margin: 0 auto;">
-        <div class="fen-coin-icon">F</div>
-        <span id="drawer-fen-balance">0</span> FEN
-      </div>
-    </div>
-
-    <div class="nitro-card">
-      <div style="font-weight: bold; font-size: 14px;">اشتراك نيترو المميز</div>
-      <div id="nitro-status-text" style="font-size: 11px;">تخصيص كامل لألوان وخلفيات جميع الأقسام!</div>
-      <button id="buy-nitro-btn" class="primary-btn" style="background: #ffffff; color: #8b5cf6;">
-        تفعيل نيترو (100 FEN)
-      </button>
-    </div>
-
-    <div id="nitro-settings-box" class="card-box hidden" style="padding: 12px; text-align:right;">
-      <h4 style="font-size: 12px; text-align: center;">تخصيص ألوان (نيترو)</h4>
-      <label style="font-size: 11px;">اللون الأساسي:</label>
-      <input type="color" id="custom-accent-color" value="#2563eb" style="height:30px;" />
-      <label style="font-size: 11px;">خلفية التطبيق:</label>
-      <input type="color" id="custom-bg-main-color" value="#f8fafc" style="height:30px;" />
-      <label style="font-size: 11px;">خلفية البطاقات:</label>
-      <input type="color" id="custom-bg-card-color" value="#ffffff" style="height:30px;" />
-      <label style="font-size: 11px;">لون النصوص:</label>
-      <input type="color" id="custom-text-color" value="#0f172a" style="height:30px;" />
-      <hr style="border-color: var(--border-color); margin: 6px 0;" />
-      <label style="font-size: 11px;">خلفية القسم:</label>
-      <select id="bg-section-selector">
-        <option value="news">الأخبار</option>
-        <option value="devs">مبرمجين</option>
-        <option value="artists">رسامين</option>
-        <option value="designers">مصممين</option>
-        <option value="dubbers">مدبلجين</option>
-      </select>
-      <label class="file-input-btn" style="width:100%; text-align:center; margin-top:4px;">
-        رفع صورة خلفية للقسم
-        <input type="file" id="custom-section-bg-input" accept="image/*" />
-      </label>
-    </div>
-
-    <label style="font-size: 11px; color: var(--text-secondary);">تعديل الاسم:</label>
-    <input type="text" id="edit-username-input" />
-
-    <div style="border-top:1px solid var(--border-color); padding-top:10px; margin-top:5px;">
-      <button id="clear-cache-btn" class="primary-btn" style="background:#ef4444; width:100%; font-size:12px;">
-        حذف الرسائل المؤقتة من الجهاز
-      </button>
-    </div>
-
-    <button id="logout-btn" class="icon-btn" style="border-color:#ef4444; color:#ef4444; justify-content:center; margin-top:auto;">تسجيل الخروج</button>
-  </div>
-
-  <!-- عرض ملف عضو -->
-  <div id="view-profile-modal" class="center-modal hidden">
-    <img id="view-profile-avatar" class="avatar-preview" src="" alt="User Avatar" />
-    <h3 id="view-profile-name" style="display:flex; align-items:center; justify-content:center;">اسم المستخدم</h3>
-    
-    <div id="admin-fen-section" class="wallet-card hidden">
-      <span style="font-size:11px; font-weight:bold; color:#b38728;">إرسال عملات FEN للعضو</span>
-      <input type="number" id="fen-send-amount" placeholder="عدد العملات..." style="text-align:center;" />
-      <button id="send-fen-btn" class="primary-btn" style="background: linear-gradient(135deg, #bf953f, #b38728); color:#fff;">إرسال العملات</button>
-    </div>
-
-    <button id="ban-device-btn" class="primary-btn hidden" style="background:#ef4444; font-size:12px;">حظر هذا الجهاز وحذف رسائله</button>
-    <button id="close-profile-modal-btn" class="icon-btn" style="justify-content:center;">إغلاق</button>
-  </div>
-
-  <!-- الشاشة الرئيسية (تتضمن المحادثة والشريط الجانبي إن كان كمبيوتر) -->
-  <div id="chat-screen" class="app-layout hidden">
-    <div class="top-bar">
-      <div id="open-sidebar-btn" class="user-profile-summary">
-        <img id="header-avatar-img" class="header-avatar" src="" alt="Avatar" />
-        <div>
-          <span id="user-display" class="user-name-text"></span>
-          <span id="admin-badge" class="admin-badge hidden">مسؤول</span>
-        </div>
-      </div>
-      
-      <div class="top-actions">
-        <button id="open-members-btn" class="icon-btn" title="قائمة الأعضاء">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </button>
-        <button id="theme-toggle-btn" class="icon-btn" title="الوضع الليلي والنهاري">
-          <svg class="moon-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <div class="chat-main-area">
-      <div id="messages-container" class="messages-wrapper"></div>
-
-      <!-- القائمة المنبثقة لزر + -->
-      <div id="plus-menu" class="plus-menu hidden">
-        <button id="open-drawing-option">رسم</button>
-        <button id="open-html-option">HTML</button>
-      </div>
-
-      <!-- مربع التحكم بالرد والتعديل -->
-      <div class="form-container-wrapper">
-        <div id="action-preview-box" class="action-preview-box hidden">
-          <div style="display:flex; flex-direction:column; gap:4px; max-width:85%;">
-            <span id="action-preview-title" style="font-size: 11px; font-weight: bold; color: var(--accent-color);"></span>
-            <span id="action-preview-text" style="font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></span>
-          </div>
-          <button id="cancel-action-btn" class="icon-btn" style="padding:4px 8px; color:#ef4444; border:none; background:none;">X</button>
-        </div>
-
-        <!-- نموذج الإرسال -->
-        <form id="message-form" class="bottom-input-bar">
-          <button type="button" id="plus-btn" class="icon-btn" style="font-size: 18px; font-weight: bold; padding: 8px 12px; color: var(--accent-color);">+</button>
-          <label id="file-label" class="file-input-btn" title="إرفاق ملف">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
-            إرفاق ملف
-            <input type="file" id="media-file-input" accept="image/*,video/*,audio/*" style="display:none;" />
-          </label>
-          <button type="button" id="gif-btn" class="icon-btn" style="font-weight: bold; color: var(--accent-color); padding: 8px 12px;">GIF</button>
-          
-          <input type="text" id="message-input" placeholder="اكتب رسالتك..." autocomplete="off" style="flex:1;" />
-          <button type="submit" id="send-btn" class="primary-btn">إرسال</button>
-        </form>
-      </div>
-    </div>
-
-    <!-- الشريط السفلي للأقسام (تم ضبط الحشوة السفلية لعدم تداخله مع شريط النظام) -->
-    <div class="bottom-nav-bar">
-      <button class="nav-tab" data-section="devs">مبرمجين</button>
-      <button class="nav-tab" data-section="artists">رسامين</button>
-      <button class="nav-tab active" data-section="news">الأخبار</button>
-      <button class="nav-tab" data-section="designers">مصممين</button>
-      <button class="nav-tab" data-section="dubbers">مدبلجين</button>
-    </div>
-  </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { initializeFirestore, collection, addDoc, onSnapshot, query, where, doc, setDoc, deleteDoc, updateDoc, increment, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-    const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232563eb'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyA6_sO1yDC3PHdsU37sbJeyf2l-tns72Qs",
-      authDomain: "fleed-43661.firebaseapp.com",
-      projectId: "fleed-43661",
-      storageBucket: "fleed-43661.firebasestorage.app",
-      messagingSenderId: "537131629542",
-      appId: "1:537131629542:web:b322e7690f34a98672b427"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = initializeFirestore(app, { experimentalForceLongPolling: true });
-
-    let deviceId = localStorage.getItem('fleed_device_id') || ('device_' + Math.random().toString(36).substring(2, 9));
-    localStorage.setItem('fleed_device_id', deviceId);
-
-    const ADMIN_SECRET = "F0_500";
-    let currentUser = JSON.parse(localStorage.getItem('fleed_studio_user')) || null;
-    let currentSection = 'news';
-    let tempAvatar = DEFAULT_AVATAR;
-    let unsubscribeMessages = null;
-    let activeProfileUser = null;
-
-    // متغيرات التعديل والرد
-    let replyingToMsg = null;
-    let editingMsgId = null;
-
-    // عناصر الصفحة
-    const deviceSelectionScreen = document.getElementById('device-selection-screen');
-    const loginScreen = document.getElementById('login-screen');
-    const bannedScreen = document.getElementById('banned-screen');
-    const chatScreen = document.getElementById('chat-screen');
-    const usernameInput = document.getElementById('username-input');
-    const passwordInput = document.getElementById('password-input');
-    const joinBtn = document.getElementById('join-btn');
-    const userDisplay = document.getElementById('user-display');
-    const adminBadge = document.getElementById('admin-badge');
-    const headerAvatarImg = document.getElementById('header-avatar-img');
-    const messagesContainer = document.getElementById('messages-container');
-    const messageForm = document.getElementById('message-form');
-    const messageInput = document.getElementById('message-input');
-    const sendBtn = document.getElementById('send-btn');
-
-    const drawerFenBalance = document.getElementById('drawer-fen-balance');
-    const buyNitroBtn = document.getElementById('buy-nitro-btn');
-    const nitroStatusText = document.getElementById('nitro-status-text');
-    const nitroSettingsBox = document.getElementById('nitro-settings-box');
-
-    const sidebar = document.getElementById('sidebar');
-    const modalOverlay = document.getElementById('modal-overlay');
-    const openSidebarBtn = document.getElementById('open-sidebar-btn');
-    const closeSidebarBtn = document.getElementById('close-sidebar-btn');
-    const sidebarUserTitle = document.getElementById('sidebar-user-title');
-    const editUsernameInput = document.getElementById('edit-username-input');
-    const logoutBtn = document.getElementById('logout-btn');
-
-    // أزرار الرد والتعديل
-    const actionPreviewBox = document.getElementById('action-preview-box');
-    const actionPreviewTitle = document.getElementById('action-preview-title');
-    const actionPreviewText = document.getElementById('action-preview-text');
-    const cancelActionBtn = document.getElementById('cancel-action-btn');
-
-    cancelActionBtn.onclick = () => {
-      replyingToMsg = null;
-      editingMsgId = null;
-      actionPreviewBox.classList.add('hidden');
-      messageInput.value = '';
-      sendBtn.innerText = 'إرسال';
-    };
-
-    // الوضع الليلي / النهاري
-    const themeToggleBtn = document.getElementById('theme-toggle-btn');
-    const moonSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
-    const sunSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
-
-    themeToggleBtn.onclick = () => {
-      document.body.classList.toggle('dark-mode');
-      const isDark = document.body.classList.contains('dark-mode');
-      themeToggleBtn.innerHTML = isDark ? sunSvg : moonSvg;
-      localStorage.setItem('fleed_theme', isDark ? 'dark' : 'light');
-    };
-
-    // اختيار الجهاز عند البدء
-    window.onload = () => {
-      document.getElementById('login-avatar-preview').src = DEFAULT_AVATAR;
-      
-      // تطبيق الوضع الليلي المحفوظ
-      if (localStorage.getItem('fleed_theme') === 'dark') {
-        document.body.classList.add('dark-mode');
-        themeToggleBtn.innerHTML = sunSvg;
-      } else {
-        themeToggleBtn.innerHTML = moonSvg;
-      }
-
-      let selectedDevice = localStorage.getItem('fleed_device_preference');
-      if (!selectedDevice) {
-        deviceSelectionScreen.classList.remove('hidden');
-      } else {
-        applyDevicePreference(selectedDevice);
-        checkLoginState();
-      }
-    };
-
-    function applyDevicePreference(type) {
-      if (type === 'desktop') {
-        document.body.classList.add('desktop-mode-active');
-        sidebar.classList.add('open');
-      }
-      deviceSelectionScreen.classList.add('hidden');
-    }
-
-    document.getElementById('btn-device-mobile').onclick = () => {
-      localStorage.setItem('fleed_device_preference', 'mobile');
-      applyDevicePreference('mobile');
-      checkLoginState();
-    };
-
-    document.getElementById('btn-device-desktop').onclick = () => {
-      localStorage.setItem('fleed_device_preference', 'desktop');
-      applyDevicePreference('desktop');
-      checkLoginState();
-    };
-
-    function checkLoginState() {
-      if (currentUser && currentUser.name) {
-        initApp();
-      } else {
-        loginScreen.classList.remove('hidden');
-      }
-    }
-
-    // فحص حظر الجهاز
-    onSnapshot(doc(db, "banned_devices", deviceId), (docSnap) => {
-      if (docSnap.exists()) {
-        bannedScreen.classList.remove('hidden');
-        chatScreen.classList.add('hidden');
-        loginScreen.classList.add('hidden');
-        deviceSelectionScreen.classList.add('hidden');
-      }
+  let h1=$('fullText').value.slice(0,110).trim(),fs=92,lines=[];
+  if(h1){
+    for(fs=92;fs>=56;fs-=4){lines=wrap(h1,1380,fs);if(lines.length<=2)break;}
+    if(lines.length>3)lines=lines.slice(0,3);
+    let lh=fs*1.28,top=ny+(nh-lines.length*lh)/2+lh/2+4;
+    x.font='900 '+fs+'px Cairo, sans-serif';x.direction='rtl';x.textAlign='center';x.textBaseline='middle';
+    lines.forEach((l,i)=>{
+      x.save();
+      if(i==0){x.fillStyle='#fff';glow('rgba(255,255,255,0.35)',6);}
+      else{let tg=x.createLinearGradient(300,0,1300,0);tg.addColorStop(0,'#1ea8ff');tg.addColorStop(1,'#10c0ff');x.fillStyle=tg;}
+      x.fillText(l,W/2,top+i*lh);x.restore();
     });
+  }
 
-    // قائمة الأعضاء وحظرهم
-    const openMembersBtn = document.getElementById('open-members-btn');
-    const membersModal = document.getElementById('members-modal');
-    const membersListContainer = document.getElementById('members-list-container');
-    const closeMembersBtn = document.getElementById('close-members-btn');
+  // الشريط السفلي - بلا اسم - فقط أيقونات + هاتف
+  x.save();rr(50,1470,1500,100,50);x.fillStyle='rgba(2,10,29,.96)';x.fill();glow(CY,14);x.strokeStyle=CY;x.lineWidth=3;x.stroke();x.restore();
+  let cy=1520;
+  iconFB(187,cy);iconIG(289,cy);iconYT(390,cy);iconTT(490,cy);
+  x.font='900 46px Cairo, sans-serif';x.direction='ltr';x.textAlign='center';x.textBaseline='middle';
+  x.save();glow(CY,10);x.fillStyle='#35dcff';x.fillText($('phoneText').value||'26361821',1390,cy+2);x.restore();
+  x.setTransform(1,0,0,1,0,0);x=mctx;
+}
 
-    openMembersBtn.onclick = async () => {
-      membersListContainer.innerHTML = '<div style="text-align:center;">جاري التحميل...</div>';
-      membersModal.classList.remove('hidden');
-      modalOverlay.classList.add('active');
-      
-      const snap = await getDocs(collection(db, "users_data"));
-      membersListContainer.innerHTML = '';
-      if(snap.empty) { membersListContainer.innerHTML = 'لا يوجد أعضاء بعد.'; return; }
+function coverDraw(src,vw,vh){
+  const ix=10,iy=10,iw=1580,ih=1118,va=vw/vh,ta=iw/ih;
+  let sw=vw,sh=vh,sx=0,sy=0;
+  if(va>ta){sw=vh*ta;sx=(vw-sw)/2;}else{sh=vw/ta;sy=(vh-sh)/2;}
+  x.save();x.beginPath();x.rect(ix,iy,iw,ih);x.clip();x.drawImage(src,sx,sy,sw,sh,ix,iy,iw,ih);x.restore();
+}
+function draw(){
+  if(dirty){dirty=false;$('fullText').value=$('fullText').value.slice(0,110);renderStatic();}
+  x=mctx;x.setTransform(1,0,0,1,0,0);x.drawImage(sc,0,0);
+  x.setTransform(S,0,0,S,0,0);
+  let drew=false;
+  if(img){coverDraw(img,img.naturalWidth,img.naturalHeight);drew=true;}
+  else if(videoReady&&videoEl.readyState>=2&&videoEl.videoWidth>0){
+    if(videoEl.paused&&isRecording&&!videoEl.ended)videoEl.play().catch(()=>{});
+    try{coverDraw(videoEl,videoEl.videoWidth,videoEl.videoHeight);drew=true;}catch(e){}
+    $('debug').textContent='الفيديو: '+videoEl.currentTime.toFixed(1)+' ث / '+videoEl.duration.toFixed(1)+' ث';
+  }
+  if(!drew){x.fillStyle='#7a9bbf';x.font='900 46px Cairo, sans-serif';x.direction='rtl';x.textAlign='center';x.textBaseline='middle';x.fillText('📹 ارفع فيديو أو صورة',800,570);}
+  x.setTransform(1,0,0,1,0,0);
+}
+function loop(ts){
+  requestAnimationFrame(loop);
+  if(ts-lastDraw<40)return; lastDraw=ts; draw();
+  if(isRecording&&stream){const tr=stream.getVideoTracks()[0]; if(tr&&tr.requestFrame)tr.requestFrame();}
+  if(isRecording&&videoReady&&!img){
+    const t=videoEl.currentTime;
+    if(Math.abs(t-lastVT)>0.05){lastVT=t;lastVTime=ts;}
+    else if(!videoEl.ended&&ts-lastVTime>10000){
+      stopNote='<br>⚠️ توقف الفيديو عن التقدم فتم إنهاء التسجيل - جرب جودة 720 أو فيديو أخف';
+      stopRecording();
+    }
+    if(videoEl.duration&&t>=videoEl.duration-0.15) stopRecording();
+  }
+  if(isRecording && img && audioReady && !videoReady){
+    if(audioEl.ended) stopRecording();
+    else if(audioEl.duration && audioEl.currentTime >= audioEl.duration-0.15) stopRecording();
+    if(audioEl.duration) $('debug').textContent='الصوت: '+audioEl.currentTime.toFixed(1)+' ث / '+audioEl.duration.toFixed(1)+' ث';
+  }
+}
+requestAnimationFrame(loop);
+['fullText','phoneText'].forEach(id=>$(id).addEventListener('input',()=>dirty=true));
+(async()=>{try{await Promise.all([document.fonts.load('900 80px Cairo','أجه آجمار'),document.fonts.load('800 44px Cairo','Aje ajmar 0123')]);}catch(e){} dirty=true;})();
 
-      snap.forEach(docSnap => {
-        const data = docSnap.data();
-        const memberName = docSnap.id;
-        
-        let adminBanHtml = '';
-        if (currentUser && currentUser.isAdmin && memberName !== currentUser.name) {
-          adminBanHtml = `<button class="ban-from-list-btn primary-btn" style="background:#ef4444; font-size:11px; padding:6px 10px;" data-name="${escapeHtml(memberName)}" data-device="${data.deviceId || ''}">حظر العضو</button>`;
+/* ---------- الصوت ---------- */
+let actx=null, gainNode=null, audioDest=null, videoSrcMade=false, boost=2.5;
+function ensureCtx(){
+  if(actx) return true;
+  try{
+    actx=new (window.AudioContext||window.webkitAudioContext)();
+    audioDest=actx.createMediaStreamDestination();
+    return true;
+  }catch(e){ actx=null; audioDest=null; return false; }
+}
+function setupAudio(){
+  if(!ensureCtx()) return;
+  if(videoSrcMade) return;
+  try{
+    const src=actx.createMediaElementSource(videoEl);
+    gainNode=actx.createGain(); gainNode.gain.value=boost;
+    const comp=actx.createDynamicsCompressor();
+    comp.threshold.value=-18; comp.knee.value=20; comp.ratio.value=6;
+    comp.attack.value=0.003; comp.release.value=0.2;
+    src.connect(gainNode); gainNode.connect(comp); comp.connect(audioDest);
+    src.connect(actx.destination);
+    videoSrcMade=true;
+  }catch(e){}
+}
+function setupAudioFile(){
+  if(!ensureCtx()) return;
+  if(audioSrcMade) return;
+  try{
+    const src=actx.createMediaElementSource(audioEl);
+    audioGain=actx.createGain(); audioGain.gain.value=boost;
+    const comp=actx.createDynamicsCompressor();
+    comp.threshold.value=-18; comp.knee.value=20; comp.ratio.value=6;
+    comp.attack.value=0.003; comp.release.value=0.2;
+    src.connect(audioGain); audioGain.connect(comp); comp.connect(audioDest);
+    src.connect(actx.destination);
+    audioSrcMade=true;
+  }catch(e){}
+}
+$('vidVol').addEventListener('input',e=>{
+  boost=parseFloat(e.target.value); $('volVal').textContent=boost.toFixed(1)+'×';
+  if(gainNode) gainNode.gain.value=boost;
+  if(audioGain) audioGain.gain.value=boost;
+});
+
+/* ---------- الرفع ---------- */
+$('logoUp').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  const im=new Image();im.onload=()=>{logoImg=im;dirty=true;};im.src=URL.createObjectURL(f);
+});
+$('videoUp').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  img=null; videoReady=false; videoEl.src=URL.createObjectURL(f); videoEl.load();
+  videoEl.onloadedmetadata=()=>{
+    videoReady=true; videoEl.currentTime=0;
+    videoEl.play().then(()=>{ setStatus('ok','✅ الفيديو يعمل ('+videoEl.videoWidth+'×'+videoEl.videoHeight+') - اضغط تسجيل - سينتهي التسجيل مع انتهاء الفيديو'); }).catch(()=>{});
+  };
+});
+videoEl.addEventListener('error',()=>{
+  const c=videoEl.error?videoEl.error.code:0;
+  if(isRecording){
+    stopNote='<br>⚠️ حدث خطأ في الفيديو (رمز '+c+') وتم حفظ ما سُجّل حتى الآن';
+    stopRecording();
+  }else{
+    setStatus('err','⚠️ تعذّر تشغيل الفيديو (رمز '+c+') - غالبًا دقته عالية جدًا (4K) أو ترميزه HEVC. جرب فيديو MP4 بترميز H.264 أو بدقة أقل');
+  }
+});
+cv.addEventListener('click',()=>{ if(videoReady) videoEl.play().catch(()=>{}); });
+$('imgUp').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const im=new Image(); im.onload=()=>{
+    img=im; videoReady=false; videoEl.pause();
+    if(audioReady){
+      setStatus('ok','✅ صورة + صوت جاهز - سينتهي التسجيل تلقائياً عند انتهاء الصوت');
+      $('debug').textContent='صورة + صوت جاهز - التسجيل تلقائي';
+    }else{
+      setStatus('ok','✅ تم تحميل الصورة - التسجيل يدوي، اضغط إيقاف عند الانتهاء');
+      $('debug').textContent='صورة جاهزة - التسجيل يدوي';
+    }
+  }; im.src=URL.createObjectURL(f);
+});
+$('audioUp').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  audioEl.src = URL.createObjectURL(f); audioEl.load();
+  audioEl.onloadedmetadata = () => {
+    audioReady = true;
+    audioEl.style.display = 'block';
+    if(img){
+      setStatus('ok','✅ صورة + صوت جاهز - سينتهي التسجيل تلقائياً عند انتهاء الصوت');
+      $('debug').textContent='صورة + صوت جاهز - التسجيل تلقائي';
+    }else{
+      setStatus('ok','✅ تم تحميل الصوت - ارفع صورة لدمجها معه');
+      $('debug').textContent='🎵 صوت جاهز: '+audioEl.duration.toFixed(1)+' ث - ارفع صورة';
+    }
+  };
+});
+audioEl.addEventListener('error',()=>{
+  const c=audioEl.error?audioEl.error.code:0;
+  setStatus('err','⚠️ تعذّر تحميل الصوت (رمز '+c+') - جرب صيغة MP3 أو M4A');
+});
+audioEl.addEventListener('ended',()=>{ if(isRecording && img && !videoReady) stopRecording(); });
+
+/* ---------- التسجيل ---------- */
+function stopRecording(){
+  if(!isRecording) return;
+  setStatus('busy','⏳ جاري تجهيز التسجيل... انتظر 2 ثانية');
+  try{ if(recorder && recorder.state!=='inactive') recorder.stop(); }catch(e){}
+  try{ if(audioReady && !audioEl.paused) audioEl.pause(); }catch(e){}
+}
+videoEl.addEventListener('ended',()=>{ if(isRecording) stopRecording(); });
+function startTimer(){ startTime=Date.now(); timerEl.classList.add('show'); timerInt=setInterval(()=>{const s=Math.floor((Date.now()-startTime)/1000); timerEl.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');},500); }
+function stopTimer(){ clearInterval(timerInt); timerEl.classList.remove('show'); }
+
+async function convertToMp4(webmBlob) {
+  try {
+    const ff = await loadFFmpeg();
+    setStatus('busy', '⏳ جاري تحويل الفيديو إلى MP4 المتوافق مع واتساب...');
+    const inputName = 'input.webm';
+    const outputName = 'output.mp4';
+    await ff.writeFile(inputName, await fetchFile(webmBlob));
+    await ff.exec([
+      '-i', inputName,
+      '-c:v', 'libx264',
+      '-preset', 'ultrafast',
+      '-crf', '23',
+      '-pix_fmt', 'yuv420p',
+      '-c:a', 'aac',
+      '-b:a', '128k',
+      '-movflags', '+faststart',
+      outputName
+    ]);
+    const data = await ff.readFile(outputName);
+    await ff.deleteFile(inputName);
+    await ff.deleteFile(outputName);
+    return new Blob([data.buffer], { type: 'video/mp4' });
+  } catch (err) {
+    console.error('Conversion error:', err);
+    throw new Error('فشل تحويل الفيديو إلى MP4. قد يكون المتصفح لا يدعم هذه العملية أو أن الذاكرة غير كافية.');
+  }
+}
+
+$('btnStart').addEventListener('click',async()=>{
+  if(isRecording) return;
+  if(!videoReady && !img){ setStatus('err','⚠️ ارفع الفيديو أو الصورة أولاً'); return; }
+  try{
+    stopNote='';
+    if(videoReady){
+      videoEl.muted=false; videoEl.volume=1;
+      setupAudio();
+      if(actx && actx.state==='suspended') await actx.resume();
+      videoEl.currentTime=0; await videoEl.play();
+    } else if(img && audioReady){
+      audioEl.muted=false; audioEl.volume=1;
+      setupAudioFile();
+      if(actx && actx.state==='suspended') await actx.resume();
+      audioEl.currentTime=0; await audioEl.play();
+    }
+    draw(); stream = cv.captureStream(25);
+    let tracks=[...stream.getVideoTracks()];
+    if(videoReady && soundOn){
+      if(audioDest){
+        const at=audioDest.stream.getAudioTracks(); if(at.length) tracks.push(at[0]);
+      }else{
+        try{ const audioStream = videoEl.captureStream ? videoEl.captureStream() : null; if(audioStream){ const at = audioStream.getAudioTracks(); if(at.length) tracks.push(at[0]); } }catch(e){}
+      }
+    } else if(img && audioReady && soundOn && audioDest){
+      const at=audioDest.stream.getAudioTracks(); if(at.length) tracks.push(at[0]);
+    }
+    let mime=''; const list=['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp8,opus','video/webm'];
+    for(const m of list){ if(window.MediaRecorder && MediaRecorder.isTypeSupported(m)){ mime=m; break; } }
+    const opts={videoBitsPerSecond:(CW>=1080?3500000:2000000),audioBitsPerSecond:128000}; if(mime) opts.mimeType=mime;
+    recorder = new MediaRecorder(new MediaStream(tracks), opts);
+    chunks=[]; recorder.ondataavailable=e=>{ if(e.data && e.data.size>0) chunks.push(e.data); };
+    recorder.onstop=async()=>{
+      stopTimer(); isRecording=false; $('resSel').disabled=false;
+      if(!chunks.length){ setStatus('err','⚠️ لم يتم التسجيل - افتح في Chrome'+stopNote); $('btnStart').style.display='block'; $('btnStop').style.display='none'; return; }
+      let blob = new Blob(chunks, {type: mime || 'video/webm'});
+      let finalMime = mime || 'video/webm';
+      if (finalMime.includes('webm') || !finalMime.includes('mp4')) {
+        try {
+          blob = await convertToMp4(blob);
+          finalMime = 'video/mp4';
+        } catch (convErr) {
+          setStatus('err', '⚠️ ' + convErr.message + ' - تم توفير الملف الأصلي (WebM) للتحميل، لكنه قد لا يعمل على واتساب.');
+          window._lastBlob = blob; window._lastMime = finalMime;
+          $('btnDownload').style.display='block';
+          $('btnStart').style.display='block'; $('btnStop').style.display='none';
+          return;
         }
-
-        membersListContainer.innerHTML += `
-          <div style="display:flex; align-items:center; justify-content:space-between; padding:10px; background:var(--bg-main); border-radius:10px; border:1px solid var(--border-color);">
-              <div style="display:flex; align-items:center; gap:10px;">
-                  <img src="${data.avatar || DEFAULT_AVATAR}" style="width:40px; height:40px; border-radius:50%; object-fit:cover; border: 1px solid var(--accent-color);">
-                  <div style="text-align:right;">
-                      <div style="font-weight:bold; font-size:14px; color:var(--text-primary);">${escapeHtml(memberName)} ${getVerifiedBadgeHtml(data.isNitro)}</div>
-                      <div style="font-size:11px; color:var(--text-secondary);">آخر تسجيل: ${new Date(data.lastLogin || Date.now()).toLocaleDateString()}</div>
-                  </div>
-              </div>
-              ${adminBanHtml}
-          </div>`;
-      });
-
-      // إضافة أحداث الحظر
-      document.querySelectorAll('.ban-from-list-btn').forEach(btn => {
-        btn.onclick = async () => {
-          const targetName = btn.dataset.name;
-          const targetDevice = btn.dataset.device;
-          
-          if (!targetDevice) return alert("عذراً، لم يتم العثور على معرف جهاز هذا العضو للحظر.");
-          
-          if (confirm(`هل أنت متأكد من حظر العضو ${targetName} وحذف جميع رسائله؟`)) {
-            btn.innerText = "جاري الحظر...";
-            btn.disabled = true;
-            
-            await setDoc(doc(db, "banned_devices", targetDevice), { bannedAt: Date.now(), user: targetName });
-            
-            const q1 = query(collection(db, "messages"), where("senderDeviceId", "==", targetDevice));
-            const q2 = query(collection(db, "messages"), where("sender", "==", targetName));
-            const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
-            
-            const deletePromises = [];
-            snap1.forEach(d => deletePromises.push(deleteDoc(doc(db, "messages", d.id))));
-            snap2.forEach(d => deletePromises.push(deleteDoc(doc(db, "messages", d.id))));
-            await Promise.all(deletePromises);
-            
-            alert(`تم حظر ${targetName} وحذف رسائله بنجاح.`);
-            openMembersBtn.click(); // لتحديث القائمة بعد الحظر
-          }
-        };
-      });
-    };
-
-    closeMembersBtn.onclick = () => {
-      membersModal.classList.add('hidden');
-      if (!sidebar.classList.contains('open')) modalOverlay.classList.remove('active');
-    };
-
-    // زر +
-    const plusBtn = document.getElementById('plus-btn');
-    const plusMenu = document.getElementById('plus-menu');
-    plusBtn.onclick = (e) => {
-      e.stopPropagation();
-      plusMenu.classList.toggle('hidden');
-    };
-    document.addEventListener('click', () => plusMenu.classList.add('hidden'));
-
-    // البحث في GIF
-    const gifBtn = document.getElementById('gif-btn');
-    const gifModal = document.getElementById('gif-modal');
-    const gifGrid = document.getElementById('gif-grid');
-    const gifSearchInput = document.getElementById('gif-search-input');
-    const GIPHY_API_KEY = "GlV1332yA39622gWSPGl30P3v3R32s8R";
-
-    gifBtn.onclick = () => {
-      gifModal.classList.remove('hidden');
-      modalOverlay.classList.add('active');
-      fetchGifs('trending');
-    };
-
-    gifSearchInput.addEventListener('input', (e) => {
-      const q = e.target.value.trim();
-      if (q) fetchGifs('search', q);
-      else fetchGifs('trending');
-    });
-
-    async function fetchGifs(type, query = '') {
-      gifGrid.innerHTML = '<div style="grid-column: span 2; text-align:center;">جاري التحميل...</div>';
-      try {
-        const url = type === 'search' 
-          ? `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=12`
-          : `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_API_KEY}&limit=12`;
-        
-        const res = await fetch(url);
-        const data = await res.json();
-        gifGrid.innerHTML = '';
-        if (data.data && data.data.length > 0) {
-          data.data.forEach(item => {
-            const imgUrl = item.images.fixed_height.url;
-            const img = document.createElement('img');
-            img.src = imgUrl;
-            img.style.cssText = "width:100%; height:95px; object-fit:cover; border-radius:8px; cursor:pointer;";
-            img.onclick = () => sendGif(imgUrl);
-            gifGrid.appendChild(img);
-          });
-        } else {
-          gifGrid.innerHTML = '<div style="grid-column: span 2; text-align:center;">لم يتم العثور على نتائج.</div>';
-        }
-      } catch (err) {
-        gifGrid.innerHTML = '<div style="grid-column: span 2; text-align:center;">حدث خطأ أثناء الاتصال.</div>';
       }
-    }
-
-    document.getElementById('close-gif-modal-btn').onclick = () => {
-      gifModal.classList.add('hidden');
-      if (!document.body.classList.contains('desktop-mode-active') && !sidebar.classList.contains('open')) modalOverlay.classList.remove('active');
+      window._lastBlob = blob; window._lastMime = finalMime;
+      const sizeMB = (blob.size / 1048576).toFixed(1);
+      setStatus(stopNote ? 'err' : 'ok', `✅ تم التسجيل - ${sizeMB} MB - صيغة ${finalMime.includes('mp4') ? 'MP4 (متوافقة مع واتساب)' : 'أخرى'} - اضغط تحميل${stopNote}`);
+      $('btnDownload').style.display = 'block';
+      $('btnStart').style.display = 'block';
+      $('btnStop').style.display = 'none';
     };
-
-    async function sendGif(url) {
-      if (currentSection === 'news' && (!currentUser || !currentUser.isAdmin)) return alert("القسم للمسؤولين فقط.");
-      gifModal.classList.add('hidden');
-      if (!document.body.classList.contains('desktop-mode-active')) modalOverlay.classList.remove('active');
-
-      const msgData = {
-        section: currentSection, sender: currentUser.name, avatar: currentUser.avatar || DEFAULT_AVATAR,
-        senderDeviceId: deviceId, text: '', timestamp: Date.now(),
-        file: { data: url, type: 'image/gif', name: 'GIF' }, isNitro: Boolean(currentUser.isNitro)
-      };
-      if (replyingToMsg) msgData.replyTo = replyingToMsg;
-      await addDoc(collection(db, "messages"), msgData);
-      cancelActionBtn.click();
-    }
-
-    // قسم الرسم والطبقات
-    const openDrawingOption = document.getElementById('open-drawing-option');
-    const drawingSection = document.getElementById('drawing-section');
-    const closeDrawingBtn = document.getElementById('close-drawing-btn');
-    const sendDrawingBtn = document.getElementById('send-drawing-btn');
-    const drawingPaper = document.getElementById('drawing-paper');
-    const addLayerBtn = document.getElementById('add-layer-btn');
-    const layerSelect = document.getElementById('layer-select');
-    const brushColor = document.getElementById('brush-color');
-    const brushSize = document.getElementById('brush-size');
-    const clearCanvasBtn = document.getElementById('clear-canvas-btn');
-    const zoomInBtn = document.getElementById('zoom-in-btn');
-    const zoomOutBtn = document.getElementById('zoom-out-btn');
-    const zoomResetBtn = document.getElementById('zoom-reset-btn');
-
-    let layers = [];
-    let currentLayerIndex = 0;
-    let isDrawing = false;
-    let drawingZoom = 1;
-
-    openDrawingOption.onclick = () => {
-      plusMenu.classList.add('hidden');
-      drawingSection.classList.remove('hidden');
-      if (layers.length === 0) createNewLayer();
-    };
-
-    closeDrawingBtn.onclick = () => drawingSection.classList.add('hidden');
-
-    function createNewLayer() {
-      const canvas = document.createElement('canvas');
-      canvas.width = 350; canvas.height = 450; canvas.className = 'drawing-layer-canvas';
-      drawingPaper.appendChild(canvas);
-      const ctx = canvas.getContext('2d');
-      layers.push({ canvas, ctx });
-      currentLayerIndex = layers.length - 1;
-      updateLayerSelect();
-      setupDrawingEvents(canvas, ctx);
-    }
-    addLayerBtn.onclick = () => createNewLayer();
-
-    function updateLayerSelect() {
-      layerSelect.innerHTML = '';
-      layers.forEach((l, idx) => {
-        const opt = document.createElement('option');
-        opt.value = idx; opt.innerText = `طبقة ${idx + 1}`;
-        if (idx === currentLayerIndex) opt.selected = true;
-        layerSelect.appendChild(opt);
-      });
-    }
-    layerSelect.onchange = (e) => currentLayerIndex = parseInt(e.target.value);
-
-    function setupDrawingEvents(canvas, ctx) {
-      function getPos(e) {
-        const rect = canvas.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        return { x: (clientX - rect.left) / drawingZoom, y: (clientY - rect.top) / drawingZoom };
-      }
-      function startDraw(e) { isDrawing = true; const pos = getPos(e); ctx.beginPath(); ctx.moveTo(pos.x, pos.y); }
-      function draw(e) {
-        if (!isDrawing) return;
-        const pos = getPos(e); ctx.strokeStyle = brushColor.value; ctx.lineWidth = brushSize.value; ctx.lineCap = 'round'; ctx.lineTo(pos.x, pos.y); ctx.stroke();
-      }
-      function stopDraw() { isDrawing = false; }
-      canvas.addEventListener('mousedown', startDraw); canvas.addEventListener('mousemove', draw); canvas.addEventListener('mouseup', stopDraw);
-      canvas.addEventListener('touchstart', startDraw); canvas.addEventListener('touchmove', draw); canvas.addEventListener('touchend', stopDraw);
-    }
-
-    clearCanvasBtn.onclick = () => { if (layers[currentLayerIndex]) layers[currentLayerIndex].ctx.clearRect(0, 0, 350, 450); };
-    zoomInBtn.onclick = () => { drawingZoom += 0.2; applyZoom(); };
-    zoomOutBtn.onclick = () => { if (drawingZoom > 0.4) drawingZoom -= 0.2; applyZoom(); };
-    zoomResetBtn.onclick = () => { drawingZoom = 1; applyZoom(); };
-    function applyZoom() { drawingPaper.style.transform = `scale(${drawingZoom})`; }
-
-    sendDrawingBtn.onclick = async () => {
-      if (currentSection === 'news' && (!currentUser || !currentUser.isAdmin)) return alert("القسم للمسؤولين فقط.");
-      const mCanvas = document.createElement('canvas'); mCanvas.width = 350; mCanvas.height = 450;
-      const mCtx = mCanvas.getContext('2d'); mCtx.fillStyle = "#ffffff"; mCtx.fillRect(0, 0, 350, 450);
-      layers.forEach(l => mCtx.drawImage(l.canvas, 0, 0));
-      const drawingDataUrl = mCanvas.toDataURL('image/png');
-      drawingSection.classList.add('hidden');
-
-      const msgData = {
-        section: currentSection, sender: currentUser.name, avatar: currentUser.avatar || DEFAULT_AVATAR,
-        senderDeviceId: deviceId, text: 'رسمة مخصصة', timestamp: Date.now(),
-        file: { data: drawingDataUrl, type: 'image/png', name: 'drawing.png' }, isNitro: Boolean(currentUser.isNitro)
-      };
-      if (replyingToMsg) msgData.replyTo = replyingToMsg;
-      await addDoc(collection(db, "messages"), msgData);
-      cancelActionBtn.click();
-    };
-
-    // قسم محرر HTML والألعاب
-    const openHtmlOption = document.getElementById('open-html-option');
-    const htmlEditorModal = document.getElementById('html-editor-modal');
-    const closeHtmlEditorBtn = document.getElementById('close-html-editor-btn');
-    const sendHtmlBtn = document.getElementById('send-html-btn');
-    const htmlCodeInput = document.getElementById('html-code-input');
-    const htmlRunnerModal = document.getElementById('html-runner-modal');
-    const htmlRunnerFrame = document.getElementById('html-runner-frame');
-    const closeHtmlRunnerBtn = document.getElementById('close-html-runner-btn');
-
-    openHtmlOption.onclick = () => {
-      plusMenu.classList.add('hidden'); htmlEditorModal.classList.remove('hidden'); modalOverlay.classList.add('active');
-    };
-    closeHtmlEditorBtn.onclick = () => {
-      htmlEditorModal.classList.add('hidden');
-      if (!document.body.classList.contains('desktop-mode-active') && !sidebar.classList.contains('open')) modalOverlay.classList.remove('active');
-    };
-    sendHtmlBtn.onclick = async () => {
-      if (currentSection === 'news' && (!currentUser || !currentUser.isAdmin)) return alert("القسم للمسؤولين فقط.");
-      const code = htmlCodeInput.value.trim(); if (!code) return alert("اكتب الكود أولاً!");
-      htmlEditorModal.classList.add('hidden');
-      if (!document.body.classList.contains('desktop-mode-active')) modalOverlay.classList.remove('active');
-
-      const msgData = {
-        section: currentSection, sender: currentUser.name, avatar: currentUser.avatar || DEFAULT_AVATAR,
-        senderDeviceId: deviceId, text: '', htmlAppCode: code, timestamp: Date.now(), isNitro: Boolean(currentUser.isNitro)
-      };
-      if (replyingToMsg) msgData.replyTo = replyingToMsg;
-      await addDoc(collection(db, "messages"), msgData);
-      cancelActionBtn.click();
-    };
-    window.runHtmlAppCode = (encodedCode) => {
-      htmlRunnerFrame.srcdoc = decodeURIComponent(encodedCode); htmlRunnerModal.classList.remove('hidden');
-    };
-    closeHtmlRunnerBtn.onclick = () => { htmlRunnerModal.classList.add('hidden'); htmlRunnerFrame.srcdoc = ''; };
-
-    // Cropper وتعديل الصورة الشخصية
-    let cropperInstance = null; let cropTargetType = 'login';
-    const cropperModal = document.getElementById('cropper-modal');
-    const cropperTargetImg = document.getElementById('cropper-target-img');
-    const cropSaveBtn = document.getElementById('crop-save-btn');
-    const cropCancelBtn = document.getElementById('crop-cancel-btn');
-
-    function openCropper(imageSrc, targetType) {
-      cropTargetType = targetType; cropperTargetImg.src = imageSrc;
-      cropperModal.classList.remove('hidden'); modalOverlay.classList.add('active');
-      if (cropperInstance) cropperInstance.destroy();
-      cropperInstance = new Cropper(cropperTargetImg, { aspectRatio: 1, viewMode: 1, autoCropArea: 0.8 });
-    }
-    cropSaveBtn.onclick = () => {
-      if (!cropperInstance) return;
-      const canvas = cropperInstance.getCroppedCanvas({ width: 300, height: 300 });
-      const croppedBase64 = canvas.toDataURL('image/jpeg', 0.9);
-      if (cropTargetType === 'login') {
-        tempAvatar = croppedBase64; document.getElementById('login-avatar-preview').src = croppedBase64;
-      } else {
-        currentUser.avatar = croppedBase64; document.getElementById('edit-avatar-preview').src = croppedBase64;
-        headerAvatarImg.src = croppedBase64; localStorage.setItem('fleed_studio_user', JSON.stringify(currentUser));
-      }
-      closeCropper();
-    };
-    function closeCropper() {
-      cropperModal.classList.add('hidden');
-      if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
-      if (!document.body.classList.contains('desktop-mode-active') && !sidebar.classList.contains('open')) modalOverlay.classList.remove('active');
-    }
-    cropCancelBtn.onclick = closeCropper;
-    document.getElementById('login-avatar-file').addEventListener('change', (e) => {
-      if (e.target.files[0]) { const reader = new FileReader(); reader.onload = (evt) => openCropper(evt.target.result, 'login'); reader.readAsDataURL(e.target.files[0]); }
-    });
-    document.getElementById('edit-avatar-file').addEventListener('change', (e) => {
-      if (e.target.files[0]) { const reader = new FileReader(); reader.onload = (evt) => openCropper(evt.target.result, 'edit'); reader.readAsDataURL(e.target.files[0]); }
-    });
-
-    // حذف الرسائل المؤقتة
-    document.getElementById('clear-cache-btn').onclick = () => {
-      if (confirm('هل أنت تأكد من حذف الرسائل المؤقتة المخزنة على هذا الجهاز؟')) {
-        messagesContainer.innerHTML = ''; alert('تم مسح ذاكرة الرسائل المؤقتة بنجاح!');
-      }
-    };
-
-    // جلب بيانات العضو
-    function listenToUserData() {
-      if (!currentUser) return;
-      onSnapshot(doc(db, "users_data", currentUser.name), (docSnap) => {
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          drawerFenBalance.innerText = data.fenBalance || 0;
-          currentUser.isNitro = !!data.isNitro;
-          currentUser.customAccent = data.customAccent || ''; currentUser.customBgMain = data.customBgMain || '';
-          currentUser.customBgCard = data.customBgCard || ''; currentUser.customTextColor = data.customTextColor || '';
-          currentUser.customBgs = data.customBgs || {};
-          updateNitroUI(); applyCustomThemeSettings();
-        }
-        updateUserHeaderDisplay();
-      });
-    }
-
-    function getVerifiedBadgeHtml(isNitro) { return isNitro ? `<span class="verified-badge" title="حساب موثق"></span>` : ''; }
-    function updateUserHeaderDisplay() {
-      if (!currentUser) return;
-      userDisplay.innerHTML = `${escapeHtml(currentUser.name)} ${getVerifiedBadgeHtml(currentUser.isNitro)}`;
-      sidebarUserTitle.innerHTML = `${escapeHtml(currentUser.name)} ${getVerifiedBadgeHtml(currentUser.isNitro)}`;
-    }
-
-    function updateNitroUI() {
-      if (currentUser && currentUser.isNitro) {
-        nitroStatusText.innerText = "حسابك مفعل بخدمة نيترو المميزة"; buyNitroBtn.innerText = "أنت مشترك بالنيترو"; buyNitroBtn.disabled = true; nitroSettingsBox.classList.remove('hidden');
-      } else {
-        nitroStatusText.innerText = "تخصيص كامل لألوان وخلفيات جميع الأقسام!"; buyNitroBtn.innerText = "تفعيل نيترو (100 FEN)"; buyNitroBtn.disabled = false; nitroSettingsBox.classList.add('hidden');
-      }
-    }
-
-    function applyCustomThemeSettings() {
-      if (currentUser && currentUser.isNitro) {
-        if (currentUser.customAccent) document.documentElement.style.setProperty('--accent-color', currentUser.customAccent);
-        if (currentUser.customBgMain) document.documentElement.style.setProperty('--bg-main', currentUser.customBgMain);
-        if (currentUser.customBgCard) { document.documentElement.style.setProperty('--bg-card', currentUser.customBgCard); document.documentElement.style.setProperty('--bg-sidebar', currentUser.customBgCard); }
-        if (currentUser.customTextColor) document.documentElement.style.setProperty('--text-primary', currentUser.customTextColor);
-        const sectionBg = currentUser.customBgs && currentUser.customBgs[currentSection];
-        if (sectionBg) { messagesContainer.style.backgroundImage = `url(${sectionBg})`; messagesContainer.style.backgroundSize = 'cover'; messagesContainer.style.backgroundPosition = 'center'; } else { messagesContainer.style.backgroundImage = ''; }
-      } else {
-        document.documentElement.style.removeProperty('--accent-color'); document.documentElement.style.removeProperty('--bg-main');
-        document.documentElement.style.removeProperty('--bg-card'); document.documentElement.style.removeProperty('--bg-sidebar');
-        document.documentElement.style.removeProperty('--text-primary'); messagesContainer.style.backgroundImage = '';
-      }
-    }
-
-    buyNitroBtn.onclick = async () => {
-      const currentBal = parseInt(drawerFenBalance.innerText) || 0;
-      if (currentBal < 100) return alert("رصيدك غير كافٍ! تحتاج 100 FEN.");
-      if (confirm("اشتراك في نيترو مقابل 100 FEN؟")) {
-        await setDoc(doc(db, "users_data", currentUser.name), { fenBalance: increment(-100), isNitro: true }, { merge: true });
-        alert("تم تفعيل النيترو وتوثيق حسابك!");
-      }
-    };
-
-    // تسجيل الدخول
-    joinBtn.onclick = async () => {
-      let rawName = usernameInput.value.trim(); const pass = passwordInput.value.trim();
-      if (!rawName || !pass) return alert('أدخل الاسم وكلمة المرور');
-
-      let isAdmin = false;
-      if (rawName.includes(ADMIN_SECRET)) { isAdmin = true; rawName = rawName.replace(ADMIN_SECRET, '').trim(); }
-
-      currentUser = { name: rawName, pass: pass, avatar: tempAvatar, isAdmin: isAdmin, deviceId: deviceId };
-      localStorage.setItem('fleed_studio_user', JSON.stringify(currentUser));
-      
-      // حفظ بيانات العضو ومعرف الجهاز للقائمة والحظر
-      await setDoc(doc(db, "users_data", currentUser.name), {
-        lastLogin: Date.now(), avatar: tempAvatar || DEFAULT_AVATAR, deviceId: deviceId
-      }, { merge: true });
-
-      loginScreen.classList.add('hidden');
-      initApp();
-    };
-
-    function initApp() {
-      loginScreen.classList.add('hidden');
-      headerAvatarImg.src = currentUser.avatar || DEFAULT_AVATAR;
-      if (currentUser.isAdmin) adminBadge.classList.remove('hidden');
-      chatScreen.classList.remove('hidden');
-      listenToUserData();
-      switchSection('news');
-    }
-
-    const navTabs = document.querySelectorAll('.nav-tab');
-    navTabs.forEach(tab => {
-      tab.onclick = () => {
-        navTabs.forEach(t => t.classList.remove('active')); tab.classList.add('active');
-        switchSection(tab.dataset.section);
-      };
-    });
-
-    function switchSection(sec) {
-      currentSection = sec; applyCustomThemeSettings();
-      const isNewsNotAdmin = (sec === 'news' && (!currentUser || !currentUser.isAdmin));
-      messageInput.disabled = isNewsNotAdmin; messageInput.placeholder = isNewsNotAdmin ? "قسم الأخبار مخصص للمسؤولين فقط" : "اكتب رسالتك...";
-      sendBtn.disabled = isNewsNotAdmin; plusBtn.disabled = isNewsNotAdmin; gifBtn.disabled = isNewsNotAdmin;
-      document.getElementById('media-file-input').disabled = isNewsNotAdmin;
-      document.getElementById('file-label').style.opacity = isNewsNotAdmin ? '0.5' : '1';
-      document.getElementById('file-label').style.pointerEvents = isNewsNotAdmin ? 'none' : 'auto';
-      cancelActionBtn.click(); // إلغاء الرد/التعديل عند تغيير القسم
-      listenToSectionMessages(sec);
-    }
-
-    // إرسال وتعديل الرسائل
-    messageForm.onsubmit = async (e) => {
-      e.preventDefault();
-      if (currentSection === 'news' && (!currentUser || !currentUser.isAdmin)) return alert("عذراً، القسم مخصص للمسؤولين فقط.");
-
-      const text = messageInput.value.trim();
-      if (!text) return;
-
-      if (editingMsgId) {
-        await updateDoc(doc(db, "messages", editingMsgId), {
-          text: text, isEdited: true
-        });
-        cancelActionBtn.click();
-        return;
-      }
-
-      const msgData = {
-        section: currentSection, sender: currentUser.name, avatar: currentUser.avatar || DEFAULT_AVATAR,
-        senderDeviceId: deviceId, text: text, timestamp: Date.now(), isNitro: Boolean(currentUser.isNitro)
-      };
-
-      if (replyingToMsg) msgData.replyTo = replyingToMsg;
-
-      messageInput.value = '';
-      cancelActionBtn.click();
-      await addDoc(collection(db, "messages"), msgData);
-    };
-
-    function listenToSectionMessages(sec) {
-      if (unsubscribeMessages) unsubscribeMessages();
-      const q = query(collection(db, "messages"), where("section", "==", sec));
-      unsubscribeMessages = onSnapshot(q, (snapshot) => {
-        const msgs = []; snapshot.forEach(doc => msgs.push({ id: doc.id, ...doc.data() }));
-        msgs.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-        renderMessages(msgs);
-      });
-    }
-
-    function formatMessageText(text) {
-      if (!text) return '';
-      let safe = escapeHtml(text);
-      safe = safe.replace(/(\b(https?):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig, '<a href="$1" target="_blank">$1</a>');
-      safe = safe.replace(/@([\w\u0600-\u06FF]+)/g, '<span class="mention-tag">@$1</span>');
-      return safe;
-    }
-
-    function renderMessages(msgs) {
-      messagesContainer.innerHTML = '';
-      msgs.forEach(msg => {
-        const isMine = msg.sender === currentUser.name;
-        const div = document.createElement('div');
-        div.className = `message-item ${isMine ? 'mine' : ''}`;
-
-        let mediaHtml = '';
-        if (msg.file && msg.file.data) mediaHtml = `<div class="media-container"><img class="media-attachment" src="${msg.file.data}" style="max-width:100%; max-height:240px; border-radius:10px; margin-top:6px;" /></div>`;
-
-        let replyBoxHtml = '';
-        if (msg.replyTo) {
-          replyBoxHtml = `
-            <div class="reply-quote-box">
-              <strong style="color:var(--accent-color); font-size:11px;">${escapeHtml(msg.replyTo.sender)}</strong>
-              <div style="opacity: 0.8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px;">${escapeHtml(msg.replyTo.text)}</div>
-            </div>`;
-        }
-
-        let editedHtml = msg.isEdited ? `<span style="font-size:10px; opacity:0.6; margin-right:6px;">(معدلة)</span>` : '';
-        let bodyContent = '';
-        if (msg.htmlAppCode) {
-          const encoded = encodeURIComponent(msg.htmlAppCode);
-          bodyContent = `<div class="html-app-card" onclick="window.runHtmlAppCode('${encoded}')"><span style="font-weight:bold; font-size:14px; color:#93c5fd;">[ تطبيق / لعبة ]</span><span style="font-size:11px; opacity:0.8;">اضغط للتشغيل</span></div>`;
-        } else {
-          bodyContent = `<div class="message-bubble">${replyBoxHtml}${formatMessageText(msg.text)}${editedHtml}${mediaHtml}</div>`;
-        }
-
-        let optionsBtnHtml = `
-          <div class="msg-menu-container" style="position:relative;">
-            <button class="msg-options-btn" style="background:none; border:none; color:var(--text-secondary); cursor:pointer; font-size:16px;">...</button>
-            <div class="msg-dropdown hidden">
-              <button class="reply-msg-btn" data-id="${msg.id}" data-sender="${escapeHtml(msg.sender)}" data-text="${escapeHtml(msg.text || 'مرفق')}">رد</button>
-        `;
-        if (isMine) {
-          if (msg.text) optionsBtnHtml += `<button class="edit-msg-btn" data-id="${msg.id}" data-text="${escapeHtml(msg.text)}" style="color:#3b82f6;">تعديل</button>`;
-          optionsBtnHtml += `<button class="delete-msg-btn" data-id="${msg.id}" style="color:#ef4444;">حذف</button>`;
-        } else if (currentUser.isAdmin) {
-          optionsBtnHtml += `<button class="delete-msg-btn" data-id="${msg.id}" style="color:#ef4444;">حذف</button>`;
-        }
-        optionsBtnHtml += `</div></div>`;
-
-        div.innerHTML = `
-          <img class="message-avatar" src="${msg.avatar || DEFAULT_AVATAR}" data-sender="${escapeHtml(msg.sender)}" data-device="${msg.senderDeviceId || ''}" />
-          <div class="message-content-box">
-            <div class="message-sender-name" data-sender="${escapeHtml(msg.sender)}" data-device="${msg.senderDeviceId || ''}">${escapeHtml(msg.sender)} ${getVerifiedBadgeHtml(msg.isNitro)}</div>
-            <div style="display:flex; align-items:center; gap:4px;">${bodyContent}${optionsBtnHtml}</div>
-          </div>
-        `;
-
-        // أحداث أزرار الرسالة
-        const senderElem = div.querySelector('.message-sender-name');
-        const avatarElem = div.querySelector('.message-avatar');
-        const openProf = () => openUserProfileModal(msg.sender, msg.senderDeviceId, msg.avatar);
-        if (senderElem) senderElem.onclick = openProf; if (avatarElem) avatarElem.onclick = openProf;
-
-        const optBtn = div.querySelector('.msg-options-btn');
-        if (optBtn) optBtn.onclick = (e) => { e.stopPropagation(); document.querySelectorAll('.msg-dropdown').forEach(d => { if (d !== div.querySelector('.msg-dropdown')) d.classList.add('hidden'); }); div.querySelector('.msg-dropdown').classList.toggle('hidden'); };
-
-        const delBtn = div.querySelector('.delete-msg-btn');
-        if (delBtn) delBtn.onclick = async () => { if (confirm("حذف هذه الرسالة؟")) await deleteDoc(doc(db, "messages", delBtn.dataset.id)); };
-
-        const repBtn = div.querySelector('.reply-msg-btn');
-        if (repBtn) repBtn.onclick = () => {
-          replyingToMsg = { id: repBtn.dataset.id, sender: repBtn.dataset.sender, text: repBtn.dataset.text };
-          editingMsgId = null; actionPreviewTitle.innerText = "جاري الرد على " + replyingToMsg.sender; actionPreviewTitle.style.color = 'var(--accent-color)';
-          actionPreviewText.innerText = replyingToMsg.text; actionPreviewBox.classList.remove('hidden');
-          messageInput.focus(); sendBtn.innerText = 'إرسال'; div.querySelector('.msg-dropdown').classList.add('hidden');
-        };
-
-        const edtBtn = div.querySelector('.edit-msg-btn');
-        if (edtBtn) edtBtn.onclick = () => {
-          editingMsgId = edtBtn.dataset.id; replyingToMsg = null;
-          actionPreviewTitle.innerText = "تعديل الرسالة"; actionPreviewTitle.style.color = '#3b82f6';
-          actionPreviewText.innerText = edtBtn.dataset.text; actionPreviewBox.classList.remove('hidden');
-          messageInput.value = edtBtn.dataset.text; messageInput.focus(); sendBtn.innerText = 'تحديث'; div.querySelector('.msg-dropdown').classList.add('hidden');
-        };
-
-        messagesContainer.appendChild(div);
-      });
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-
-    document.addEventListener('click', (e) => {
-      if(!e.target.classList.contains('msg-options-btn')) {
-        document.querySelectorAll('.msg-dropdown').forEach(d => d.classList.add('hidden'));
-      }
-    });
-
-    // عرض ملف العضو
-    const viewProfileModal = document.getElementById('view-profile-modal');
-    const viewProfileAvatar = document.getElementById('view-profile-avatar');
-    const viewProfileName = document.getElementById('view-profile-name');
-    const adminFenSection = document.getElementById('admin-fen-section');
-    const sendFenBtn = document.getElementById('send-fen-btn');
-    const fenSendAmount = document.getElementById('fen-send-amount');
-    const banDeviceBtn = document.getElementById('ban-device-btn');
-    const closeProfileModalBtn = document.getElementById('close-profile-modal-btn');
-
-    function openUserProfileModal(name, targetDeviceId, avatar) {
-      activeProfileUser = { name, deviceId: targetDeviceId };
-      viewProfileName.innerText = name; viewProfileAvatar.src = avatar || DEFAULT_AVATAR;
-      if (currentUser.isAdmin && name !== currentUser.name) { adminFenSection.classList.remove('hidden'); banDeviceBtn.classList.remove('hidden'); } else { adminFenSection.classList.add('hidden'); banDeviceBtn.classList.add('hidden'); }
-      viewProfileModal.classList.remove('hidden'); modalOverlay.classList.add('active');
-    }
-
-    closeProfileModalBtn.onclick = () => {
-      viewProfileModal.classList.add('hidden');
-      if (!document.body.classList.contains('desktop-mode-active') && !sidebar.classList.contains('open')) modalOverlay.classList.remove('active');
-    };
-
-    sendFenBtn.onclick = async () => {
-      const amt = parseInt(fenSendAmount.value);
-      if (!amt || amt <= 0) return alert("أدخل عدداً صحيحاً للعملات!");
-      await setDoc(doc(db, "users_data", activeProfileUser.name), { fenBalance: increment(amt) }, { merge: true });
-      alert(`تم إرسال ${amt} FEN بنجاح!`); fenSendAmount.value = '';
-    };
-
-    banDeviceBtn.onclick = async () => {
-      if (!activeProfileUser.deviceId) return alert("لا يوجد معرف جهاز.");
-      if (confirm(`حظر جهاز ${activeProfileUser.name} وحذف رسائله؟`)) {
-        await setDoc(doc(db, "banned_devices", activeProfileUser.deviceId), { bannedAt: Date.now(), user: activeProfileUser.name });
-        const q1 = query(collection(db, "messages"), where("senderDeviceId", "==", activeProfileUser.deviceId));
-        const q2 = query(collection(db, "messages"), where("sender", "==", activeProfileUser.name));
-        const [snap1, snap2] = await Promise.all([getDocs(q1), getDocs(q2)]);
-        const deletePromises = [];
-        snap1.forEach(d => deletePromises.push(deleteDoc(doc(db, "messages", d.id))));
-        snap2.forEach(d => deletePromises.push(deleteDoc(doc(db, "messages", d.id))));
-        await Promise.all(deletePromises);
-        alert(`تم الحظر بنجاح!`); viewProfileModal.classList.add('hidden');
-        if (!document.body.classList.contains('desktop-mode-active')) modalOverlay.classList.remove('active');
-      }
-    };
-
-    // القائمة الجانبية
-    openSidebarBtn.onclick = () => {
-      if (document.body.classList.contains('desktop-mode-active')) return;
-      editUsernameInput.value = currentUser.name;
-      document.getElementById('edit-avatar-preview').src = currentUser.avatar || DEFAULT_AVATAR;
-      sidebar.classList.add('open'); modalOverlay.classList.add('active');
-    };
-
-    closeSidebarBtn.onclick = () => {
-      sidebar.classList.remove('open'); modalOverlay.classList.remove('active');
-    };
-
-    modalOverlay.onclick = () => {
-      if (!document.body.classList.contains('desktop-mode-active')) sidebar.classList.remove('open');
-      cropperModal.classList.add('hidden'); gifModal.classList.add('hidden');
-      htmlEditorModal.classList.add('hidden'); viewProfileModal.classList.add('hidden'); membersModal.classList.add('hidden');
-      if (!document.body.classList.contains('desktop-mode-active')) modalOverlay.classList.remove('active');
-    };
-
-    logoutBtn.onclick = () => { localStorage.removeItem('fleed_studio_user'); localStorage.removeItem('fleed_device_preference'); location.reload(); };
-
-    function escapeHtml(text) {
-      const div = document.createElement('div'); div.innerText = text; return div.innerHTML;
-    }
-  </script>
+    recorder.start(500); isRecording=true; startTimer();
+    lastVT=videoEl.currentTime; lastVTime=performance.now();
+    $('resSel').disabled=true;
+    try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').catch(()=>{}); }catch(e){}
+    $('btnStart').style.display='none'; $('btnStop').style.display='block'; $('btnDownload').style.display='none';
+    setStatus('busy','🔴 جاري التسجيل... سينتهي وحده عند انتهاء الفيديو/الصوت، أو اضغط إيقاف');
+  }catch(err){ setStatus('err','⚠️ اضغط زر تشغيل ▶️ في الفيديو فوق أولاً ثم اضغط تسجيل'); }
+});
+$('btnStop').addEventListener('click',stopRecording);
+$('btnDownload').addEventListener('click',()=>{
+  const blob=window._lastBlob; if(!blob) return;
+  let ext = 'webm';
+  if (window._lastMime && window._lastMime.includes('mp4')) ext = 'mp4';
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='aje_ajmar_'+Date.now()+'.'+ext; a.click();
+  setStatus('ok','✅ تم التحميل');
+});
+window.addEventListener('beforeunload',e=>{ if(isRecording){ e.preventDefault(); e.returnValue='التسجيل جارٍ'; }});
+</script>
 </body>
 </html>
