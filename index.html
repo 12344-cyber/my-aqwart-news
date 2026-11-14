@@ -49,7 +49,6 @@ canvas{width:100%;border-radius:12px;background:#000;display:block}
 <div class="timer" id="timer">00:00</div>
 <button class="b1" id="btnDownload" style="display:none">⬇️ تحميل الفيديو</button>
 <div class="status" id="status">ارفع الفيديو أو الصورة ثم اضغط تسجيل</div>
-<div style="font-size:12px;color:#7a9bbf;margin-top:8px">⚠️ افتح في Chrome وليس داخل واتساب. في واتساب: النقاط الثلاثة ← فتح في المتصفح<br>✅ لما ينتهي الفيديو، التسجيل ينتهي وحده. أو اضغط إيقاف قبل ذلك.<br>🖼️ صورة + صوت: سينتهي التسجيل تلقائياً عند انتهاء الصوت.<br>💡 إذا توقف الفيديو أثناء التسجيل: اختر 720، أو استخدم فيديو أصغر (H.264 / MP4).</div>
 </div>
 <div class="card"><h3>2 - المعاينة</h3><canvas id="c" width="720" height="720"></canvas></div>
 </div>
@@ -69,12 +68,10 @@ let isRecording=false, recorder=null, chunks=[], stream=null, timerInt=null, sta
 let stopNote='', lastVT=0, lastVTime=0;
 let ffmpeg = null;
 const { fetchFile } = FFmpegUtil;
-
 async function loadFFmpeg() {
   if (ffmpeg) return ffmpeg;
-  setStatus('busy','⏳ جاري تحميل محول الفيديو (قد يستغرق بعض الوقت)...');
+  setStatus('busy','⏳ جاري تحميل محول الفيديو...');
   ffmpeg = new FFmpeg();
-  ffmpeg.on('log', ({ message }) => console.log(message));
   const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
   await ffmpeg.load({
     coreURL: await FFmpegUtil.toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
@@ -85,8 +82,6 @@ async function loadFFmpeg() {
 function setStatus(cls,msg){statusEl.className='status '+cls; statusEl.innerHTML=msg;}
 function setRes(n){ CW=n; S=CW/W; cv.width=cv.height=CW; sc.width=sc.height=CW; dirty=true; }
 $('resSel').addEventListener('change',e=>{ if(isRecording){ e.target.value=String(CW); return; } setRes(parseInt(e.target.value)); });
-
-/* ---------- أدوات الرسم ---------- */
 function rr(a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.lineTo(a+w-r,b);x.quadraticCurveTo(a+w,b,a+w,b+r);x.lineTo(a+w,b+h-r);x.quadraticCurveTo(a+w,b+h,a+w-r,b+h);x.lineTo(a+r,b+h);x.quadraticCurveTo(a,b+h,a,b+h-r);x.lineTo(a,b+r);x.quadraticCurveTo(a,b,a+r,b);x.closePath();}
 function glow(c,b){x.shadowColor=c;x.shadowBlur=b;}
 function noGlow(){x.shadowBlur=0;x.shadowColor='transparent';}
@@ -99,7 +94,6 @@ function person(cx,cy,s){
   x.bezierCurveTo(cx+s*0.3,cy+s*0.1,cx+s*0.5,cy+s*0.12,cx+s*0.5,cy+s*0.5);
   x.closePath();x.fill();
 }
-// شعار الصفحة فقط - الزاوية 90 على اليمين في الأعلى - كبير 130
 function logoTopRight(){
   let s=130, cx=W-85, cy=85;
   if(logoImg){
@@ -108,7 +102,7 @@ function logoTopRight(){
     let m=Math.min(logoImg.width,logoImg.height);
     x.drawImage(logoImg,(logoImg.width-m)/2,(logoImg.height-m)/2,m,m,cx-r,cy-r,s,s);
     x.restore();
-    x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.strokeStyle=CY;x.lineWidth=4;x.stroke();
+    x.save();noGlow();x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.strokeStyle=CY;x.lineWidth=4;x.stroke();x.restore();
   }else{
     person(cx,cy,s);
     x.beginPath();x.arc(cx,cy,s/2,0,Math.PI*2);x.strokeStyle=CY;x.lineWidth=4;x.stroke();
@@ -137,8 +131,6 @@ function wrap(text,maxW,fs){
   for(let w of words){let t=cur?cur+' '+w:w;if(x.measureText(t).width>maxW&&cur){lines.push(cur);cur=w;}else cur=t;}
   if(cur)lines.push(cur);return lines;
 }
-
-/* ---------- الطبقة الثابتة - الستايل الجديد ---------- */
 function renderStatic(){
   x=sctx; x.setTransform(S,0,0,S,0,0); x.clearRect(0,0,W,W);
   let g=x.createLinearGradient(0,0,0,W);g.addColorStop(0,'#071c3f');g.addColorStop(1,'#020b20');
@@ -151,21 +143,13 @@ function renderStatic(){
   trace([[30,1370],[110,1370],[150,1410],[420,1410]]);trace([[1570,1360],[1480,1360],[1440,1400],[1250,1400]]);
   trace([[40,120],[100,120],[140,80]]);trace([[1560,120],[1520,120],[1490,160]]);
   x.save();glow(CY,12);x.strokeStyle='rgba(0,229,255,0.5)';x.lineWidth=3;rr(8,8,W-16,W-16,26);x.stroke();x.restore();
-
-  // بلا شريط علوي - بلا اسم في الأعلى
-  // منطقة الفيديو / الصورة - بلا إطار - مساحة أكبر
   x.fillStyle='#000';x.fillRect(10,10,1580,1118);
   x.save();noGlow();x.strokeStyle='rgba(0,229,255,0.25)';x.lineWidth=0.5;x.strokeRect(10,10,1580,1118);x.restore();
-
-  // شعار الصفحة فقط في الأعلى على اليمين
-  logoTopRight();
-
-  // لوحة الخبر - مستطيل عادي - بلا خط هندسي
+  // الشعار لا يرسم هنا - لأنه سيتغطى بالفيديو
   let nx=28,ny=1132,nw=1544,nh=313;
   x.save();rr(nx,ny,nw,nh,16);
   let ng=x.createLinearGradient(0,ny,0,ny+nh);ng.addColorStop(0,'#061836');ng.addColorStop(1,'#04122c');
   x.fillStyle=ng;x.fill();glow(CY,10);x.strokeStyle='rgba(0,229,255,0.7)';x.lineWidth=2.5;x.stroke();x.restore();
-
   let h1=$('fullText').value.slice(0,110).trim(),fs=92,lines=[];
   if(h1){
     for(fs=92;fs>=56;fs-=4){lines=wrap(h1,1380,fs);if(lines.length<=2)break;}
@@ -179,8 +163,6 @@ function renderStatic(){
       x.fillText(l,W/2,top+i*lh);x.restore();
     });
   }
-
-  // الشريط السفلي - بلا اسم - فقط أيقونات + هاتف
   x.save();rr(50,1470,1500,100,50);x.fillStyle='rgba(2,10,29,.96)';x.fill();glow(CY,14);x.strokeStyle=CY;x.lineWidth=3;x.stroke();x.restore();
   let cy=1520;
   iconFB(187,cy);iconIG(289,cy);iconYT(390,cy);iconTT(490,cy);
@@ -188,7 +170,6 @@ function renderStatic(){
   x.save();glow(CY,10);x.fillStyle='#35dcff';x.fillText($('phoneText').value||'26361821',1390,cy+2);x.restore();
   x.setTransform(1,0,0,1,0,0);x=mctx;
 }
-
 function coverDraw(src,vw,vh){
   const ix=10,iy=10,iw=1580,ih=1118,va=vw/vh,ta=iw/ih;
   let sw=vw,sh=vh,sx=0,sy=0;
@@ -207,6 +188,8 @@ function draw(){
     $('debug').textContent='الفيديو: '+videoEl.currentTime.toFixed(1)+' ث / '+videoEl.duration.toFixed(1)+' ث';
   }
   if(!drew){x.fillStyle='#7a9bbf';x.font='900 46px Cairo, sans-serif';x.direction='rtl';x.textAlign='center';x.textBaseline='middle';x.fillText('📹 ارفع فيديو أو صورة',800,570);}
+  // الشعار فوق الفيديو - هنا هو الصح
+  logoTopRight();
   x.setTransform(1,0,0,1,0,0);
 }
 function loop(ts){
@@ -216,189 +199,52 @@ function loop(ts){
   if(isRecording&&videoReady&&!img){
     const t=videoEl.currentTime;
     if(Math.abs(t-lastVT)>0.05){lastVT=t;lastVTime=ts;}
-    else if(!videoEl.ended&&ts-lastVTime>10000){
-      stopNote='<br>⚠️ توقف الفيديو عن التقدم فتم إنهاء التسجيل - جرب جودة 720 أو فيديو أخف';
-      stopRecording();
-    }
+    else if(!videoEl.ended&&ts-lastVTime>10000){ stopNote='<br>⚠️ توقف الفيديو'; stopRecording(); }
     if(videoEl.duration&&t>=videoEl.duration-0.15) stopRecording();
   }
   if(isRecording && img && audioReady && !videoReady){
     if(audioEl.ended) stopRecording();
     else if(audioEl.duration && audioEl.currentTime >= audioEl.duration-0.15) stopRecording();
-    if(audioEl.duration) $('debug').textContent='الصوت: '+audioEl.currentTime.toFixed(1)+' ث / '+audioEl.duration.toFixed(1)+' ث';
   }
 }
 requestAnimationFrame(loop);
 ['fullText','phoneText'].forEach(id=>$(id).addEventListener('input',()=>dirty=true));
-(async()=>{try{await Promise.all([document.fonts.load('900 80px Cairo','أجه آجمار'),document.fonts.load('800 44px Cairo','Aje ajmar 0123')]);}catch(e){} dirty=true;})();
-
-/* ---------- الصوت ---------- */
+(async()=>{try{await Promise.all([document.fonts.load('900 80px Cairo','أجه آجمار')]);}catch(e){} dirty=true;})();
 let actx=null, gainNode=null, audioDest=null, videoSrcMade=false, boost=2.5;
-function ensureCtx(){
-  if(actx) return true;
-  try{
-    actx=new (window.AudioContext||window.webkitAudioContext)();
-    audioDest=actx.createMediaStreamDestination();
-    return true;
-  }catch(e){ actx=null; audioDest=null; return false; }
-}
-function setupAudio(){
-  if(!ensureCtx()) return;
-  if(videoSrcMade) return;
-  try{
-    const src=actx.createMediaElementSource(videoEl);
-    gainNode=actx.createGain(); gainNode.gain.value=boost;
-    const comp=actx.createDynamicsCompressor();
-    comp.threshold.value=-18; comp.knee.value=20; comp.ratio.value=6;
-    comp.attack.value=0.003; comp.release.value=0.2;
-    src.connect(gainNode); gainNode.connect(comp); comp.connect(audioDest);
-    src.connect(actx.destination);
-    videoSrcMade=true;
-  }catch(e){}
-}
-function setupAudioFile(){
-  if(!ensureCtx()) return;
-  if(audioSrcMade) return;
-  try{
-    const src=actx.createMediaElementSource(audioEl);
-    audioGain=actx.createGain(); audioGain.gain.value=boost;
-    const comp=actx.createDynamicsCompressor();
-    comp.threshold.value=-18; comp.knee.value=20; comp.ratio.value=6;
-    comp.attack.value=0.003; comp.release.value=0.2;
-    src.connect(audioGain); audioGain.connect(comp); comp.connect(audioDest);
-    src.connect(actx.destination);
-    audioSrcMade=true;
-  }catch(e){}
-}
-$('vidVol').addEventListener('input',e=>{
-  boost=parseFloat(e.target.value); $('volVal').textContent=boost.toFixed(1)+'×';
-  if(gainNode) gainNode.gain.value=boost;
-  if(audioGain) audioGain.gain.value=boost;
-});
-
-/* ---------- الرفع ---------- */
-$('logoUp').addEventListener('change',e=>{
-  const f=e.target.files[0];if(!f)return;
-  const im=new Image();im.onload=()=>{logoImg=im;dirty=true;};im.src=URL.createObjectURL(f);
-});
-$('videoUp').addEventListener('change',e=>{
-  const f=e.target.files[0]; if(!f) return;
-  img=null; videoReady=false; videoEl.src=URL.createObjectURL(f); videoEl.load();
-  videoEl.onloadedmetadata=()=>{
-    videoReady=true; videoEl.currentTime=0;
-    videoEl.play().then(()=>{ setStatus('ok','✅ الفيديو يعمل ('+videoEl.videoWidth+'×'+videoEl.videoHeight+') - اضغط تسجيل - سينتهي التسجيل مع انتهاء الفيديو'); }).catch(()=>{});
-  };
-});
-videoEl.addEventListener('error',()=>{
-  const c=videoEl.error?videoEl.error.code:0;
-  if(isRecording){
-    stopNote='<br>⚠️ حدث خطأ في الفيديو (رمز '+c+') وتم حفظ ما سُجّل حتى الآن';
-    stopRecording();
-  }else{
-    setStatus('err','⚠️ تعذّر تشغيل الفيديو (رمز '+c+') - غالبًا دقته عالية جدًا (4K) أو ترميزه HEVC. جرب فيديو MP4 بترميز H.264 أو بدقة أقل');
-  }
-});
-cv.addEventListener('click',()=>{ if(videoReady) videoEl.play().catch(()=>{}); });
-$('imgUp').addEventListener('change',e=>{
-  const f=e.target.files[0]; if(!f) return;
-  const im=new Image(); im.onload=()=>{
-    img=im; videoReady=false; videoEl.pause();
-    if(audioReady){
-      setStatus('ok','✅ صورة + صوت جاهز - سينتهي التسجيل تلقائياً عند انتهاء الصوت');
-      $('debug').textContent='صورة + صوت جاهز - التسجيل تلقائي';
-    }else{
-      setStatus('ok','✅ تم تحميل الصورة - التسجيل يدوي، اضغط إيقاف عند الانتهاء');
-      $('debug').textContent='صورة جاهزة - التسجيل يدوي';
-    }
-  }; im.src=URL.createObjectURL(f);
-});
-$('audioUp').addEventListener('change',e=>{
-  const f=e.target.files[0]; if(!f) return;
-  audioEl.src = URL.createObjectURL(f); audioEl.load();
-  audioEl.onloadedmetadata = () => {
-    audioReady = true;
-    audioEl.style.display = 'block';
-    if(img){
-      setStatus('ok','✅ صورة + صوت جاهز - سينتهي التسجيل تلقائياً عند انتهاء الصوت');
-      $('debug').textContent='صورة + صوت جاهز - التسجيل تلقائي';
-    }else{
-      setStatus('ok','✅ تم تحميل الصوت - ارفع صورة لدمجها معه');
-      $('debug').textContent='🎵 صوت جاهز: '+audioEl.duration.toFixed(1)+' ث - ارفع صورة';
-    }
-  };
-});
-audioEl.addEventListener('error',()=>{
-  const c=audioEl.error?audioEl.error.code:0;
-  setStatus('err','⚠️ تعذّر تحميل الصوت (رمز '+c+') - جرب صيغة MP3 أو M4A');
-});
-audioEl.addEventListener('ended',()=>{ if(isRecording && img && !videoReady) stopRecording(); });
-
-/* ---------- التسجيل ---------- */
-function stopRecording(){
-  if(!isRecording) return;
-  setStatus('busy','⏳ جاري تجهيز التسجيل... انتظر 2 ثانية');
-  try{ if(recorder && recorder.state!=='inactive') recorder.stop(); }catch(e){}
-  try{ if(audioReady && !audioEl.paused) audioEl.pause(); }catch(e){}
-}
+function ensureCtx(){ if(actx) return true; try{ actx=new (window.AudioContext||window.webkitAudioContext)(); audioDest=actx.createMediaStreamDestination(); return true; }catch(e){ return false; } }
+function setupAudio(){ if(!ensureCtx()) return; if(videoSrcMade) return; try{ const src=actx.createMediaElementSource(videoEl); gainNode=actx.createGain(); gainNode.gain.value=boost; const comp=actx.createDynamicsCompressor(); src.connect(gainNode); gainNode.connect(comp); comp.connect(audioDest); src.connect(actx.destination); videoSrcMade=true; }catch(e){} }
+function setupAudioFile(){ if(!ensureCtx()) return; if(audioSrcMade) return; try{ const src=actx.createMediaElementSource(audioEl); audioGain=actx.createGain(); audioGain.gain.value=boost; const comp=actx.createDynamicsCompressor(); src.connect(audioGain); audioGain.connect(comp); comp.connect(audioDest); src.connect(actx.destination); audioSrcMade=true; }catch(e){} }
+$('vidVol').addEventListener('input',e=>{ boost=parseFloat(e.target.value); $('volVal').textContent=boost.toFixed(1)+'×'; if(gainNode) gainNode.gain.value=boost; if(audioGain) audioGain.gain.value=boost; });
+$('logoUp').addEventListener('change',e=>{ const f=e.target.files[0];if(!f)return; const im=new Image();im.onload=()=>{logoImg=im;dirty=true;};im.src=URL.createObjectURL(f); });
+$('videoUp').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f) return; img=null; videoReady=false; videoEl.src=URL.createObjectURL(f); videoEl.load(); videoEl.onloadedmetadata=()=>{ videoReady=true; videoEl.currentTime=0; videoEl.play().catch(()=>{}); }; });
+$('imgUp').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f) return; const im=new Image(); im.onload=()=>{ img=im; videoReady=false; videoEl.pause(); }; im.src=URL.createObjectURL(f); });
+$('audioUp').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f) return; audioEl.src = URL.createObjectURL(f); audioEl.load(); audioEl.onloadedmetadata = () => { audioReady = true; audioEl.style.display = 'block'; }; });
+function stopRecording(){ if(!isRecording) return; setStatus('busy','⏳ جاري تجهيز التسجيل...'); try{ if(recorder && recorder.state!=='inactive') recorder.stop(); }catch(e){} try{ if(audioReady && !audioEl.paused) audioEl.pause(); }catch(e){} }
 videoEl.addEventListener('ended',()=>{ if(isRecording) stopRecording(); });
 function startTimer(){ startTime=Date.now(); timerEl.classList.add('show'); timerInt=setInterval(()=>{const s=Math.floor((Date.now()-startTime)/1000); timerEl.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');},500); }
 function stopTimer(){ clearInterval(timerInt); timerEl.classList.remove('show'); }
-
 async function convertToMp4(webmBlob) {
   try {
     const ff = await loadFFmpeg();
-    setStatus('busy', '⏳ جاري تحويل الفيديو إلى MP4 المتوافق مع واتساب...');
-    const inputName = 'input.webm';
-    const outputName = 'output.mp4';
-    await ff.writeFile(inputName, await fetchFile(webmBlob));
-    await ff.exec([
-      '-i', inputName,
-      '-c:v', 'libx264',
-      '-preset', 'ultrafast',
-      '-crf', '23',
-      '-pix_fmt', 'yuv420p',
-      '-c:a', 'aac',
-      '-b:a', '128k',
-      '-movflags', '+faststart',
-      outputName
-    ]);
-    const data = await ff.readFile(outputName);
-    await ff.deleteFile(inputName);
-    await ff.deleteFile(outputName);
+    setStatus('busy', '⏳ جاري تحويل الفيديو إلى MP4...');
+    await ff.writeFile('input.webm', await fetchFile(webmBlob));
+    await ff.exec(['-i','input.webm','-c:v','libx264','-preset','ultrafast','-crf','23','-pix_fmt','yuv420p','-c:a','aac','-b:a','128k','-movflags','+faststart','output.mp4']);
+    const data = await ff.readFile('output.mp4');
+    await ff.deleteFile('input.webm'); await ff.deleteFile('output.mp4');
     return new Blob([data.buffer], { type: 'video/mp4' });
-  } catch (err) {
-    console.error('Conversion error:', err);
-    throw new Error('فشل تحويل الفيديو إلى MP4. قد يكون المتصفح لا يدعم هذه العملية أو أن الذاكرة غير كافية.');
-  }
+  } catch (err) { throw new Error('فشل التحويل'); }
 }
-
 $('btnStart').addEventListener('click',async()=>{
   if(isRecording) return;
   if(!videoReady && !img){ setStatus('err','⚠️ ارفع الفيديو أو الصورة أولاً'); return; }
   try{
     stopNote='';
-    if(videoReady){
-      videoEl.muted=false; videoEl.volume=1;
-      setupAudio();
-      if(actx && actx.state==='suspended') await actx.resume();
-      videoEl.currentTime=0; await videoEl.play();
-    } else if(img && audioReady){
-      audioEl.muted=false; audioEl.volume=1;
-      setupAudioFile();
-      if(actx && actx.state==='suspended') await actx.resume();
-      audioEl.currentTime=0; await audioEl.play();
-    }
+    if(videoReady){ videoEl.muted=false; videoEl.volume=1; setupAudio(); if(actx && actx.state==='suspended') await actx.resume(); videoEl.currentTime=0; await videoEl.play(); }
+    else if(img && audioReady){ audioEl.muted=false; audioEl.volume=1; setupAudioFile(); if(actx && actx.state==='suspended') await actx.resume(); audioEl.currentTime=0; await audioEl.play(); }
     draw(); stream = cv.captureStream(25);
     let tracks=[...stream.getVideoTracks()];
-    if(videoReady && soundOn){
-      if(audioDest){
-        const at=audioDest.stream.getAudioTracks(); if(at.length) tracks.push(at[0]);
-      }else{
-        try{ const audioStream = videoEl.captureStream ? videoEl.captureStream() : null; if(audioStream){ const at = audioStream.getAudioTracks(); if(at.length) tracks.push(at[0]); } }catch(e){}
-      }
-    } else if(img && audioReady && soundOn && audioDest){
-      const at=audioDest.stream.getAudioTracks(); if(at.length) tracks.push(at[0]);
-    }
+    if(videoReady && soundOn && audioDest){ const at=audioDest.stream.getAudioTracks(); if(at.length) tracks.push(at[0]); }
+    else if(img && audioReady && soundOn && audioDest){ const at=audioDest.stream.getAudioTracks(); if(at.length) tracks.push(at[0]); }
     let mime=''; const list=['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp8,opus','video/webm'];
     for(const m of list){ if(window.MediaRecorder && MediaRecorder.isTypeSupported(m)){ mime=m; break; } }
     const opts={videoBitsPerSecond:(CW>=1080?3500000:2000000),audioBitsPerSecond:128000}; if(mime) opts.mimeType=mime;
@@ -406,43 +252,28 @@ $('btnStart').addEventListener('click',async()=>{
     chunks=[]; recorder.ondataavailable=e=>{ if(e.data && e.data.size>0) chunks.push(e.data); };
     recorder.onstop=async()=>{
       stopTimer(); isRecording=false; $('resSel').disabled=false;
-      if(!chunks.length){ setStatus('err','⚠️ لم يتم التسجيل - افتح في Chrome'+stopNote); $('btnStart').style.display='block'; $('btnStop').style.display='none'; return; }
+      if(!chunks.length){ setStatus('err','⚠️ لم يتم التسجيل'); $('btnStart').style.display='block'; $('btnStop').style.display='none'; return; }
       let blob = new Blob(chunks, {type: mime || 'video/webm'});
       let finalMime = mime || 'video/webm';
       if (finalMime.includes('webm') || !finalMime.includes('mp4')) {
-        try {
-          blob = await convertToMp4(blob);
-          finalMime = 'video/mp4';
-        } catch (convErr) {
-          setStatus('err', '⚠️ ' + convErr.message + ' - تم توفير الملف الأصلي (WebM) للتحميل، لكنه قد لا يعمل على واتساب.');
-          window._lastBlob = blob; window._lastMime = finalMime;
-          $('btnDownload').style.display='block';
-          $('btnStart').style.display='block'; $('btnStop').style.display='none';
-          return;
-        }
+        try { blob = await convertToMp4(blob); finalMime = 'video/mp4'; } catch(e){ setStatus('err','⚠️ فشل التحويل'); window._lastBlob = blob; window._lastMime = finalMime; $('btnDownload').style.display='block'; $('btnStart').style.display='block'; $('btnStop').style.display='none'; return; }
       }
       window._lastBlob = blob; window._lastMime = finalMime;
-      const sizeMB = (blob.size / 1048576).toFixed(1);
-      setStatus(stopNote ? 'err' : 'ok', `✅ تم التسجيل - ${sizeMB} MB - صيغة ${finalMime.includes('mp4') ? 'MP4 (متوافقة مع واتساب)' : 'أخرى'} - اضغط تحميل${stopNote}`);
-      $('btnDownload').style.display = 'block';
-      $('btnStart').style.display = 'block';
-      $('btnStop').style.display = 'none';
+      setStatus('ok','✅ تم التسجيل - اضغط تحميل');
+      $('btnDownload').style.display = 'block'; $('btnStart').style.display = 'block'; $('btnStop').style.display = 'none';
     };
     recorder.start(500); isRecording=true; startTimer();
     lastVT=videoEl.currentTime; lastVTime=performance.now();
     $('resSel').disabled=true;
-    try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').catch(()=>{}); }catch(e){}
     $('btnStart').style.display='none'; $('btnStop').style.display='block'; $('btnDownload').style.display='none';
-    setStatus('busy','🔴 جاري التسجيل... سينتهي وحده عند انتهاء الفيديو/الصوت، أو اضغط إيقاف');
+    setStatus('busy','🔴 جاري التسجيل...');
   }catch(err){ setStatus('err','⚠️ اضغط زر تشغيل ▶️ في الفيديو فوق أولاً ثم اضغط تسجيل'); }
 });
 $('btnStop').addEventListener('click',stopRecording);
 $('btnDownload').addEventListener('click',()=>{
   const blob=window._lastBlob; if(!blob) return;
-  let ext = 'webm';
-  if (window._lastMime && window._lastMime.includes('mp4')) ext = 'mp4';
+  let ext = 'webm'; if (window._lastMime && window._lastMime.includes('mp4')) ext = 'mp4';
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='aje_ajmar_'+Date.now()+'.'+ext; a.click();
-  setStatus('ok','✅ تم التحميل');
 });
 window.addEventListener('beforeunload',e=>{ if(isRecording){ e.preventDefault(); e.returnValue='التسجيل جارٍ'; }});
 </script>
